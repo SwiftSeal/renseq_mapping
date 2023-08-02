@@ -48,7 +48,7 @@ rule mpileup:
     params:
         reference = get_reference()
     conda:
-        "envs/samtools.yaml"
+        "envs/bowtie2.yaml"
     shell:
         """
         samtools mpileup -f {params.reference} {input} > {output}
@@ -60,7 +60,7 @@ rule varscan:
     output:
         "results/varscan/{source}.varscan"
     conda:
-        "envs/varscan.yaml"
+        "envs/bowtie2.yaml"
     shell:
         """
         varscan mpileup2snp {input} --output-vcf 1 > {output}
