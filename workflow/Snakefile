@@ -1,16 +1,16 @@
 configfile: "config/config.yaml"
 
-PARENTS = ["resistant_parent"]
-
 def get_reference():
     return config["reference"]["fasta"]
 
 def get_reads(wildcards):
-    return config[wildcards.parent]["R1"], config[wildcards.parent]["R2"]
+    R1 = config[wildcards.source][wildcards.phenotype]["R1"]
+    R2 = config[wildcards.source][wildcards.phenotype]["R2"]
+    return R1, R2
 
 rule all:
     input:
-        expand("results/bowtie2_align/{parent}.bam", parent = PARENTS)
+        expand("results/varscan/{source}.varscan", source = ["parent", "bulk"])
 
 
 rule bowtie2_index:
@@ -30,7 +30,7 @@ rule bowtie2_align:
         R1, R2 = get_reads(wildcards),
         index = "data/indexes/reference.1.bt2"
     output:
-        bam = "results/bowtie2_align/{parent}.bam"
+        bam = "results/bowtie2_align/{source}.{phenotype}.bam"
     conda:
         "envs/bowtie2.yaml"
     shell:
@@ -40,13 +40,26 @@ rule bowtie2_align:
 
 rule mpileup:
     input:
-        bam = "results/bowtie2-align/{parent}.bam",
-        reference = get_reference()
+        expand("results/bowtie2_align/{source}.{phenotype}.bam", phenotype = ["resistant", "susceptible"]),
     output:
-        "results/mpileup/{parent}.mpileup"
+        "results/mpileup/{source}.mpileup"
+    params:
+        reference = get_reference()
     conda:
         "envs/samtools.yaml"
     shell:
         """
-        samtools mpileup -f {input.reference} {input.bam} > {output}
+        samtools mpileup -f {params.reference} {input} > {output}
+        """
+
+rule varscan:
+    input:
+        "results/mpileup/{source}.mpileup"
+    output:
+        "results/varscan/{source}.varscan"
+    conda:
+        "envs/varscan.yaml"
+    shell:
+        """
+        varscan mpileup2snp {input} --output-vcf 1 > {output}
         """
