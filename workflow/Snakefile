@@ -41,7 +41,8 @@ rule bowtie2_align:
 
 rule mpileup:
     input:
-        expand("results/bowtie2_align/{source}.{phenotype}.bam", phenotype = ["resistant", "susceptible"]),
+        "results/bowtie2_align/{source}.resistant.bam",
+        "results/bowtie2_align/{source}.susceptible.bam"
     output:
         "results/mpileup/{source}.mpileup"
     params:
