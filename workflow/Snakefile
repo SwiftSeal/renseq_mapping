@@ -1,0 +1,38 @@
+configfile: "config/config.yaml"
+
+PARENTS = ["resistant_parent"]
+
+def get_reference():
+    return config["reference"]["fasta"]
+
+def get_reads(wildcards):
+    return config[wildcards.parent]["R1"], config[wildcards.parent]["R2"]
+
+rule all:
+    input:
+        expand("results/bowtie2-align/{parent}.bam", parent = PARENTS)
+
+rule bowtie2-index:
+    input:
+        get_reference()
+    output:
+        "results/bowtie2-index/reference.1.bt2"
+    conda:
+        "envs/bowtie2.yaml"
+    shell:
+        """
+        bowtie2-build {input.fasta} results/bowtie2-index/reference
+        """
+
+rule bowtie2-align:
+    input:
+        R1, R2 = get_reads(wildcards),
+        index = "data/indexes/reference.1.bt2"
+    output:
+        bam = "results/bowtie2-align/{parent}.bam"
+    conda:
+        "envs/bowtie2.yaml"
+    shell:
+        """
+        bowtie2 -x results/bowtie2-index/ -1 {input.R1} -2 {input.R2} --no-unal --no-discordant | samtools view -bS - > {output}
+        """
