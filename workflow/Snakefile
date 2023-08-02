@@ -27,8 +27,9 @@ rule bowtie2_index:
 
 rule bowtie2_align:
     input:
-        R1, R2 = get_reads(wildcards),
-        index = "data/indexes/reference.1.bt2"
+        R1 = lambda wildcards: get_reads(wildcards)[0],
+        R2 = lambda wildcards: get_reads(wildcards)[1],
+        index = "results/bowtie2_index/reference.1.bt2"
     output:
         bam = "results/bowtie2_align/{source}.{phenotype}.bam"
     conda:
