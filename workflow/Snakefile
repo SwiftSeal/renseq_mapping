@@ -10,13 +10,14 @@ def get_reads(wildcards):
 
 rule all:
     input:
-        expand("results/bowtie2-align/{parent}.bam", parent = PARENTS)
+        expand("results/bowtie2_align/{parent}.bam", parent = PARENTS)
 
-rule bowtie2-index:
+
+rule bowtie2_index:
     input:
-        get_reference()
+        fasta = get_reference()
     output:
-        "results/bowtie2-index/reference.1.bt2"
+        "results/bowtie2_index/reference.1.bt2"
     conda:
         "envs/bowtie2.yaml"
     shell:
@@ -24,15 +25,28 @@ rule bowtie2-index:
         bowtie2-build {input.fasta} results/bowtie2-index/reference
         """
 
-rule bowtie2-align:
+rule bowtie2_align:
     input:
         R1, R2 = get_reads(wildcards),
         index = "data/indexes/reference.1.bt2"
     output:
-        bam = "results/bowtie2-align/{parent}.bam"
+        bam = "results/bowtie2_align/{parent}.bam"
     conda:
         "envs/bowtie2.yaml"
     shell:
         """
         bowtie2 -x results/bowtie2-index/ -1 {input.R1} -2 {input.R2} --no-unal --no-discordant | samtools view -bS - > {output}
+        """
+
+rule mpileup:
+    input:
+        bam = "results/bowtie2-align/{parent}.bam",
+        reference = get_reference()
+    output:
+        "results/mpileup/{parent}.mpileup"
+    conda:
+        "envs/samtools.yaml"
+    shell:
+        """
+        samtools mpileup -f {input.reference} {input.bam} > {output}
         """
