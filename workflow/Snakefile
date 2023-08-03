@@ -41,7 +41,8 @@ rule bowtie2_align:
     threads:
         16
     resources:
-        mem_mb = 16000
+        mem_mb = 16000,
+        partition = "short"
     shell:
         """
         bowtie2 -p {threads} {params} -x results/bowtie2_index/ -1 {input.R1} -2 {input.R2} | samtools view -bS - > {output}
