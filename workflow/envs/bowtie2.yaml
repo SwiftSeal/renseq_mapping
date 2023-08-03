@@ -2,3 +2,5 @@ channels:
  - bioconda
 dependencies:
  - bowtie2=2.5.1
+ - samtools=1.17
+ - varscan=2.4.4
