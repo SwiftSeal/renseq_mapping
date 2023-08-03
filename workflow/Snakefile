@@ -1,3 +1,5 @@
+import pandas as pd
+
 configfile: "config/config.yaml"
 
 def get_reference():
@@ -10,7 +12,7 @@ def get_reads(wildcards):
 
 rule all:
     input:
-        expand("results/varscan/{source}.varscan", source = ["parent", "bulk"])
+        expand("results/varscan/{source}.vcf", source = ["parent", "bulk"])
 
 
 rule bowtie2_index:
@@ -31,7 +33,7 @@ rule bowtie2_align:
         R2 = lambda wildcards: get_reads(wildcards)[1],
         index = "results/bowtie2_index/reference.1.bt2"
     output:
-        bam = "results/bowtie2_align/{source}.{phenotype}.bam"
+        bam = temp("results/bowtie2_align/{source}.{phenotype}.bam")
     conda:
         "envs/bowtie2.yaml"
     shell:
@@ -44,7 +46,7 @@ rule mpileup:
         "results/bowtie2_align/{source}.resistant.bam",
         "results/bowtie2_align/{source}.susceptible.bam"
     output:
-        "results/mpileup/{source}.mpileup"
+        temp("results/mpileup/{source}.mpileup")
     params:
         reference = get_reference()
     conda:
@@ -58,10 +60,18 @@ rule varscan:
     input:
         "results/mpileup/{source}.mpileup"
     output:
-        "results/varscan/{source}.varscan"
+        "results/varscan/{source}.vcf"
     conda:
         "envs/bowtie2.yaml"
     shell:
         """
-        varscan mpileup2snp {input} --output-vcf 1 > {output}
+        varscan mpileup2snp {input} --output-vcf 1 --strand-filter 0 > {output}
         """
+    
+#rule filter:
+#    input:
+#        "results/varscan/{source}.vcf"
+#    output:
+#        "results/varscan/{source}.filtered.vcf"
+#    run:
+#
