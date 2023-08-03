@@ -16,5 +16,5 @@ bulk:
     R2: /mnt/shared/projects/jhi/potato/202201_RESAS_PCN/08022023_Arbor_RenSeq/9447-JK-6_021_S1_L005_R2_001.fastq.gz
 reference:
   name: athlete_hifi
-  fasta: /mnt/shared/scratch/tadams/smrtrenseq_assembly/assembly/Athlete/Athlete.contigs.fasta
+  fasta: /mnt/shared/scratch/msmith/renseq_mapping/config/Athlete.contigs.fasta
 bowtie2_args: "--score-min L,-0.18,-0.18 --phred33 --fr --maxins 1000 --very-sensitive --no-unal --no-discordant"
