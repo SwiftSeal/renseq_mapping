@@ -24,7 +24,7 @@ rule bowtie2_index:
         "envs/bowtie2.yaml"
     shell:
         """
-        bowtie2-build {input.fasta} results/bowtie2-index/reference
+        bowtie2-build {input.fasta} results/bowtie2_index/reference
         """
 
 rule bowtie2_align:
@@ -34,11 +34,17 @@ rule bowtie2_align:
         index = "results/bowtie2_index/reference.1.bt2"
     output:
         bam = temp("results/bowtie2_align/{source}.{phenotype}.bam")
+    params:
+        config["bowtie2_args"]
     conda:
         "envs/bowtie2.yaml"
+    threads:
+        16
+    resources:
+        mem_mb = 16000
     shell:
         """
-        bowtie2 -x results/bowtie2-index/ -1 {input.R1} -2 {input.R2} --no-unal --no-discordant | samtools view -bS - > {output}
+        bowtie2 -p {threads} {params} -x results/bowtie2_index/ -1 {input.R1} -2 {input.R2} | samtools view -bS - > {output}
         """
 
 rule mpileup:
@@ -68,10 +74,17 @@ rule varscan:
         varscan mpileup2snp {input} --output-vcf 1 --strand-filter 0 > {output}
         """
     
-#rule filter:
-#    input:
-#        "results/varscan/{source}.vcf"
-#    output:
-#        "results/varscan/{source}.filtered.vcf"
-#    run:
-#
+rule filter:
+    input:
+        "results/varscan/{source}.vcf"
+    output:
+        "results/varscan/{source}.filtered.vcf"
+    run:
+        with open(input[0]) as infile, open(output[0], "w") as outfile:
+            for line in infile:
+                if line.startswith("#"):
+                    outfile.write(line)
+                else:
+                    fields = line.split("\t")
+                    if fields[6] == "PASS":
+                        outfile.write(line)
