@@ -14,17 +14,26 @@ rule all:
     input:
         expand("results/varscan/{source}.vcf", source = ["parent", "bulk"])
 
-
-rule bowtie2_index:
+rule get_reference:
     input:
         fasta = get_reference()
     output:
-        "results/bowtie2_index/reference.1.bt2"
+        "results/reference/reference.fasta"
+    shell:
+        """
+        cp {input.fasta} {output}
+        """
+
+rule bowtie2_index:
+    input:
+        fasta = "results/reference/reference.fasta"
+    output:
+        "results/reference/reference.1.bt2"
     conda:
         "envs/bowtie2.yaml"
     shell:
         """
-        bowtie2-build {input.fasta} results/bowtie2_index/reference
+        bowtie2-build {input.fasta}
         """
 
 rule bowtie2_align:
@@ -33,7 +42,7 @@ rule bowtie2_align:
         R2 = lambda wildcards: get_reads(wildcards)[1],
         index = "results/bowtie2_index/reference.1.bt2"
     output:
-        bam = temp("results/bowtie2_align/{source}.{phenotype}.bam")
+        bam = "results/bowtie2_align/{source}.{phenotype}.bam"
     params:
         config["bowtie2_args"]
     conda:
@@ -41,26 +50,37 @@ rule bowtie2_align:
     threads:
         16
     resources:
-        mem_mb = 16000,
+        mem_mb = 4000,
         partition = "short"
     shell:
         """
-        bowtie2 -p {threads} {params} -x results/bowtie2_index/ -1 {input.R1} -2 {input.R2} | samtools view -bS - > {output}
+        bowtie2 -p {threads} {params} -x results/bowtie2_index/reference -1 {input.R1} -2 {input.R2} | samtools view -bS - > {output}
         """
 
-rule mpileup:
+rule sort_bam:
     input:
-        "results/bowtie2_align/{source}.resistant.bam",
-        "results/bowtie2_align/{source}.susceptible.bam"
+        "results/bowtie2_align/{source}.{phenotype}.bam"
     output:
-        temp("results/mpileup/{source}.mpileup")
-    params:
-        reference = get_reference()
+        "results/bowtie2_align/{source}.{phenotype}.sorted.bam"
     conda:
         "envs/bowtie2.yaml"
     shell:
         """
-        samtools mpileup -f {params.reference} {input} > {output}
+        samtools sort -o {output} {input}
+        """
+
+rule mpileup:
+    input:
+        resistant = "results/bowtie2_align/{source}.resistant.sorted.bam",
+        susceptible = "results/bowtie2_align/{source}.susceptible.sorted.bam",
+        reference = "results/reference/reference.fasta"
+    output:
+        "results/mpileup/{source}.mpileup"
+    conda:
+        "envs/bowtie2.yaml"
+    shell:
+        """
+        samtools mpileup -f {input.reference} {input.resistant} {input.susceptible} > {output}
         """
 
 rule varscan:
