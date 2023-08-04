@@ -95,17 +95,34 @@ rule varscan:
         varscan mpileup2snp {input} --output-vcf 1 --strand-filter 0 > {output}
         """
     
-rule filter:
+rule filter_variants:
     input:
         "results/varscan/{source}.vcf"
     output:
         "results/varscan/{source}.filtered.vcf"
+    params:
+        min = config["varscan"]["min_freq"],
+        max = config["varscan"]["max_freq"]
+    conda:
+        "envs/bowtie2.yaml"
     run:
         with open(input[0]) as infile, open(output[0], "w") as outfile:
             for line in infile:
+                # ignore header lines
                 if line.startswith("#"):
                     outfile.write(line)
                 else:
                     fields = line.split("\t")
-                    if fields[6] == "PASS":
+                    keys = fields[8].split(":")
+                    values = fields[9].split(":")
+
+                    # error and warn user if operating on wrong field
+                    if keys[6] != "FREQ":
+                        raise ValueError("Expected FREQ field at position 7, got {} instead".format(keys[6]))
+                    
+                    # convert freq to float
+                    freq = float(values[6].rstrip("%"))
+
+                    # write out if freq is within bounds
+                    if freq >= params.min and freq <= params.max:
                         outfile.write(line)

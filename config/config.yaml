@@ -18,3 +18,6 @@ reference:
   name: athlete_hifi
   fasta: /mnt/shared/scratch/msmith/renseq_mapping/config/Athlete.contigs.fasta
 bowtie2_args: "--score-min L,-0.18,-0.18 --phred33 --fr --maxins 1000 --very-sensitive --no-unal --no-discordant"
+varscan:
+  min: 25
+  max: 50
