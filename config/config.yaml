@@ -1,4 +1,7 @@
 parent:
+  varscan:
+    min: 0
+    max: 10
   resistant:
     name: athlete
     R1: /mnt/shared/projects/jhi/potato/202201_RESAS_PCN/08022023_Arbor_RenSeq/9447-JK-6_019_S1_L005_R1_001.fastq.gz
@@ -8,6 +11,9 @@ parent:
     R1: /mnt/shared/projects/jhi/potato/202201_RESAS_PCN/08022023_Arbor_RenSeq/9447-JK-6_018_S1_L005_R1_001.fastq.gz
     R2: /mnt/shared/projects/jhi/potato/202201_RESAS_PCN/08022023_Arbor_RenSeq/9447-JK-6_018_S1_L005_R2_001.fastq.gz
 bulk:
+  varscan:
+    min: 0
+    max: 10
   resistant:
     R1: /mnt/shared/projects/jhi/potato/202201_RESAS_PCN/08022023_Arbor_RenSeq/9447-JK-6_020_S1_L005_R1_001.fastq.gz
     R2: /mnt/shared/projects/jhi/potato/202201_RESAS_PCN/08022023_Arbor_RenSeq/9447-JK-6_020_S1_L005_R2_001.fastq.gz
@@ -18,6 +24,3 @@ reference:
   name: athlete_hifi
   fasta: /mnt/shared/scratch/msmith/renseq_mapping/config/Athlete.contigs.fasta
 bowtie2_args: "--score-min L,-0.18,-0.18 --phred33 --fr --maxins 1000 --very-sensitive --no-unal --no-discordant"
-varscan:
-  min: 25
-  max: 50

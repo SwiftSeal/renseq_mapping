@@ -12,7 +12,7 @@ def get_reads(wildcards):
 
 rule all:
     input:
-        expand("results/varscan/{source}.vcf", source = ["parent", "bulk"])
+        expand("results/varscan/{source}.filtered.vcf", source = ["parent", "bulk"])
 
 rule get_reference:
     input:
@@ -101,8 +101,8 @@ rule filter_variants:
     output:
         "results/varscan/{source}.filtered.vcf"
     params:
-        min = config["varscan"]["min_freq"],
-        max = config["varscan"]["max_freq"]
+        min = config[{wildcards.source}]["varscan"]["min"],
+        max = config[{wildcards.source}]["varscan"]["max"]
     conda:
         "envs/bowtie2.yaml"
     run:
