@@ -105,7 +105,8 @@ rule plot_variants_frequency:
         report("results/plots/{source}.png")
     run:
         with open(input[0]) as infile:
-            df = pd.DataFrame(columns = ["source", "frequency"])
+            source = []
+            frequency = []
             for line in infile:
                 # ignore header lines
                 if line.startswith("#"):
@@ -125,9 +126,14 @@ rule plot_variants_frequency:
                     susceptible_freq = float(susceptible[6].rstrip("%"))
 
                     # add to dataframe
-                    df = df.append({"source": "resistant", "frequency": resistant_freq}, ignore_index = True)
-                    df = df.append({"source": "susceptible", "frequency": susceptible_freq}, ignore_index = True)
+                    source.append("resistant")
+                    frequency.append(resistant_freq)
+                    source.append("susceptible")
+                    frequency.append(susceptible_freq)
 
+            # create dataframe
+            df = pd.DataFrame({"source": source, "frequency": frequency})
+            
             # plot
             sns.displot(df, x = "frequency", hue = "source", kind = "kde")
             plt.savefig(output[0])
