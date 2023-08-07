@@ -146,7 +146,7 @@ rule filter_variants:
     input:
         "results/varscan/{source}.vcf"
     output:
-        "results/filtered/{source}.vcf"
+        report("results/filtered/{source}.vcf")
     params:
         susceptible_min = config["allele_frequency"]["susceptible"]["min"],
         susceptible_max = config["allele_frequency"]["susceptible"]["max"],
@@ -186,27 +186,22 @@ rule merge_variants:
     input:
         expand("results/filtered/{source}.vcf", source = ["parent", "bulk"])
     output:
-        "results/result.tsv"
+        report("results/result.tsv")
     run:
-        for file in input:
-            with open(file) as infile:
-                # convert to pandas dataframe
-                df = pd.read_csv(infile, sep = "\t", comment = "#", header = None)
-                df.columns = ["chrom", "pos", "id", "ref", "alt", "qual", "filter", "info", "format", "resistant", "susceptible"]
+        parent_df = pd.read_csv(input[0], sep = "\t", comment = "#", header = None)
+        parent_df = parent_df[[0, 1]]
+        parent_df.columns = ["chromosome", "position"]
 
-                # add source column
-                df["source"] = file.split("/")[2].split(".")[0]
-        
-                # append to list
-                if "merged" not in locals():
-                    merged = df
-                else:
-                    merged = merged.append(df)
+        bulk_df = pd.read_csv(input[1], sep = "\t", comment = "#", header = None)
+        bulk_df = bulk_df[[0, 1]]
+        bulk_df.columns = ["chromosome", "position"]
+
+        # add source column
+        parent_df["source"] = "parent"
+        bulk_df["source"] = "bulk"
+
+        intersect = pd.merge(parent_df, bulk_df, how = "inner", on = ["chromosome", "position"])
+
+        # write out
+        intersect.to_csv(output[0], sep = "\t", index = False)
                 
-        # create summary table with columns "chrom", "n_variants", "n_resistant", "n_susceptible", "n_both"
-        summary = merged.groupby(["chrom", "pos"]).agg({"source": "count", "resistant": "sum", "susceptible": "sum"}).reset_index()
-        summary.columns = ["chrom", "pos", "n_variants", "n_resistant", "n_susceptible"]
-        summary["n_both"] = summary["n_resistant"] + summary["n_susceptible"]
-
-        # write out summary table
-        summary.to_csv(output[0], sep = "\t", index = False)
