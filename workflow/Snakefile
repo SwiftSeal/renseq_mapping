@@ -101,8 +101,10 @@ rule filter_variants:
     output:
         "results/varscan/{source}.filtered.vcf"
     params:
-        min = config[{wildcards.source}]["varscan"]["min"],
-        max = config[{wildcards.source}]["varscan"]["max"]
+        susceptible_min = config["allele_frequency"]["susceptible"]["min"],
+        susceptible_max = config["allele_frequency"]["susceptible"]["max"],
+        resistant_min = config["allele_frequency"]["resistant"]["min"],
+        resistant_max = config["allele_frequency"]["resistant"]["max"]
     conda:
         "envs/bowtie2.yaml"
     run:
@@ -114,15 +116,22 @@ rule filter_variants:
                 else:
                     fields = line.split("\t")
                     keys = fields[8].split(":")
-                    values = fields[9].split(":")
+                    resistant = fields[9].split(":")
+                    susceptible = fields[10].split(":")
 
                     # error and warn user if operating on wrong field
                     if keys[6] != "FREQ":
                         raise ValueError("Expected FREQ field at position 7, got {} instead".format(keys[6]))
                     
                     # convert freq to float
-                    freq = float(values[6].rstrip("%"))
+                    resistant_freq = float(resistant[6].rstrip("%"))
+                    susceptible_freq = float(susceptible[6].rstrip("%"))
 
                     # write out if freq is within bounds
-                    if freq >= params.min and freq <= params.max:
+                    if susceptible_min <= susceptible_freq <= susceptible_max and resistant_min <= resistant_freq <= resistant_max:
                         outfile.write(line)
+                    elif 100 - susceptible_max <= susceptible_freq <= 100 - susceptible_min and 100 - resistant_max <= resistant_freq <= 100 - resistant_min:
+                        outfile.write(line)
+                    else:
+                        pass
+                    
