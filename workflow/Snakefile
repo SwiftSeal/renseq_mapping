@@ -15,7 +15,8 @@ def get_reads(wildcards):
 rule all:
     input:
         expand("results/filtered/{source}.vcf", source = ["parent", "bulk"]),
-        expand("results/plots/{source}.png", source = ["parent", "bulk"])
+        expand("results/plots/{source}.png", source = ["parent", "bulk"]),
+        "results/results.tsv"
 
 rule get_reference:
     input:
@@ -181,3 +182,31 @@ rule filter_variants:
                     elif 100 - params.susceptible_max <= susceptible_freq <= 100 - params.susceptible_min and 100 - params.resistant_max <= resistant_freq <= 100 - params.resistant_min:
                         outfile.write(line)
                     
+rule merge_variants:
+    input:
+        expand("results/filtered/{source}.vcf", source = ["parent", "bulk"])
+    output:
+        "results/result.tsv"
+    run:
+        for file in input:
+            with open(file) as infile:
+                # convert to pandas dataframe
+                df = pd.read_csv(infile, sep = "\t", comment = "#", header = None)
+                df.columns = ["chrom", "pos", "id", "ref", "alt", "qual", "filter", "info", "format", "resistant", "susceptible"]
+
+                # add source column
+                df["source"] = file.split("/")[2].split(".")[0]
+        
+                # append to list
+                if "merged" not in locals():
+                    merged = df
+                else:
+                    merged = merged.append(df)
+                
+        # create summary table with columns "chrom", "n_variants", "n_resistant", "n_susceptible", "n_both"
+        summary = merged.groupby(["chrom", "pos"]).agg({"source": "count", "resistant": "sum", "susceptible": "sum"}).reset_index()
+        summary.columns = ["chrom", "pos", "n_variants", "n_resistant", "n_susceptible"]
+        summary["n_both"] = summary["n_resistant"] + summary["n_susceptible"]
+
+        # write out summary table
+        summary.to_csv(output[0], sep = "\t", index = False)
