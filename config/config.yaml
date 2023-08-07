@@ -19,8 +19,8 @@ reference:
   fasta: /mnt/shared/scratch/msmith/renseq_mapping/config/Athlete.contigs.fasta
 allele_frequency:
   susceptible:
-    min: 0
-    max: 5
+    min: 95
+    max: 100
   resistant:
     min: 20
     max: 30

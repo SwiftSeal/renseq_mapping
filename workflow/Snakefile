@@ -1,3 +1,7 @@
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
 configfile: "config/config.yaml"
 
 def get_reference():
@@ -10,7 +14,8 @@ def get_reads(wildcards):
 
 rule all:
     input:
-        expand("results/filtered/{source}.vcf", source = ["parent", "bulk"])
+        expand("results/filtered/{source}.vcf", source = ["parent", "bulk"]),
+        expand("results/plots/{source}.png", source = ["parent", "bulk"])
 
 rule get_reference:
     input:
@@ -31,14 +36,14 @@ rule bowtie2_index:
         "envs/bowtie2.yaml"
     shell:
         """
-        bowtie2-build {input.fasta}
+        bowtie2-build {input.fasta} results/reference/reference
         """
 
 rule bowtie2_align:
     input:
         R1 = lambda wildcards: get_reads(wildcards)[0],
         R2 = lambda wildcards: get_reads(wildcards)[1],
-        index = "results/bowtie2_index/reference.1.bt2"
+        index = "results/reference/reference.1.bt2"
     output:
         bam = "results/bowtie2_align/{source}.{phenotype}.bam"
     params:
@@ -52,7 +57,7 @@ rule bowtie2_align:
         partition = "short"
     shell:
         """
-        bowtie2 -p {threads} {params} -x results/bowtie2_index/reference -1 {input.R1} -2 {input.R2} | samtools view -bS - > {output}
+        bowtie2 -p {threads} {params} -x results/reference/reference -1 {input.R1} -2 {input.R2} | samtools view -bS - > {output}
         """
 
 rule sort_bam:
@@ -92,6 +97,40 @@ rule varscan:
         """
         varscan mpileup2snp {input} --output-vcf 1 --strand-filter 0 > {output}
         """
+
+rule plot_variants_frequency:
+    input:
+        "results/varscan/{source}.vcf"
+    output:
+        report("results/plots/{source}.png")
+    run:
+        with open(input[0]) as infile:
+            df = pd.DataFrame(columns = ["source", "frequency"])
+            for line in infile:
+                # ignore header lines
+                if line.startswith("#"):
+                    pass
+                else:
+                    fields = line.split("\t")
+                    keys = fields[8].split(":")
+                    resistant = fields[9].split(":")
+                    susceptible = fields[10].split(":")
+                    
+                    # error and warn user if operating on wrong field
+                    if keys[6] != "FREQ":
+                        raise ValueError("Expected FREQ field at position 7, got {} instead".format(keys[6]))
+                    
+                    # convert freq to float
+                    resistant_freq = float(resistant[6].rstrip("%"))
+                    susceptible_freq = float(susceptible[6].rstrip("%"))
+
+                    # add to dataframe
+                    df = df.append({"source": "resistant", "frequency": resistant_freq}, ignore_index = True)
+                    df = df.append({"source": "susceptible", "frequency": susceptible_freq}, ignore_index = True)
+
+            # plot
+            sns.displot(df, x = "frequency", hue = "source", kind = "kde")
+            plt.savefig(output[0])
     
 rule filter_variants:
     input:
@@ -124,9 +163,9 @@ rule filter_variants:
                     susceptible_freq = float(susceptible[6].rstrip("%"))
 
                     # write out if freq is within bounds
-                    if susceptible_min <= susceptible_freq <= susceptible_max and resistant_min <= resistant_freq <= resistant_max:
+                    if params.susceptible_min <= susceptible_freq <= params.susceptible_max and params.resistant_min <= resistant_freq <= params.resistant_max:
                         outfile.write(line)
-                    elif 100 - susceptible_max <= susceptible_freq <= 100 - susceptible_min and 100 - resistant_max <= resistant_freq <= 100 - resistant_min:
+                    elif 100 - params.susceptible_max <= susceptible_freq <= 100 - params.susceptible_min and 100 - params.resistant_max <= resistant_freq <= 100 - params.resistant_min:
                         outfile.write(line)
                     else:
                         pass
