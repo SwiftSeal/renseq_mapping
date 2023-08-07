@@ -110,26 +110,29 @@ rule plot_variants_frequency:
             for line in infile:
                 # ignore header lines
                 if line.startswith("#"):
-                    pass
-                else:
-                    fields = line.split("\t")
-                    keys = fields[8].split(":")
-                    resistant = fields[9].split(":")
-                    susceptible = fields[10].split(":")
-                    
-                    # error and warn user if operating on wrong field
-                    if keys[6] != "FREQ":
-                        raise ValueError("Expected FREQ field at position 7, got {} instead".format(keys[6]))
-                    
-                    # convert freq to float
-                    resistant_freq = float(resistant[6].rstrip("%"))
-                    susceptible_freq = float(susceptible[6].rstrip("%"))
+                    continue
+                
+                fields = line.split("\t")
+                keys = fields[8].split(":")
+                resistant = fields[9].split(":")
+                susceptible = fields[10].split(":")
+                
+                # error and warn user if operating on wrong field
+                if keys[6] != "FREQ":
+                    raise ValueError("Expected FREQ field at position 7, got {} instead".format(keys[6]))
 
-                    # add to dataframe
-                    source.append("resistant")
-                    frequency.append(resistant_freq)
-                    source.append("susceptible")
-                    frequency.append(susceptible_freq)
+                if len(resistant) != 7 or len(susceptible) != 7:
+                    continue
+                
+                # convert freq to float
+                resistant_freq = float(resistant[6].rstrip("%"))
+                susceptible_freq = float(susceptible[6].rstrip("%"))
+
+                # add to dataframe
+                source.append("resistant")
+                frequency.append(resistant_freq)
+                source.append("susceptible")
+                frequency.append(susceptible_freq)
 
             # create dataframe
             df = pd.DataFrame({"source": source, "frequency": frequency})
@@ -163,6 +166,10 @@ rule filter_variants:
                     # error and warn user if operating on wrong field
                     if keys[6] != "FREQ":
                         raise ValueError("Expected FREQ field at position 7, got {} instead".format(keys[6]))
+
+                    # ignore lines where resistant or susceptible is not called
+                    if len(resistant) != 7 or len(susceptible) != 7:
+                        continue
                     
                     # convert freq to float
                     resistant_freq = float(resistant[6].rstrip("%"))
