@@ -121,7 +121,7 @@ rule plot_variants_frequency:
                 if keys[6] != "FREQ":
                     raise ValueError("Expected FREQ field at position 7, got {} instead".format(keys[6]))
 
-                if len(resistant) != 7 or len(susceptible) != 7:
+                if len(resistant) != len(keys) or len(susceptible) != len(keys):
                     continue
                 
                 # convert freq to float
@@ -167,8 +167,8 @@ rule filter_variants:
                     if keys[6] != "FREQ":
                         raise ValueError("Expected FREQ field at position 7, got {} instead".format(keys[6]))
 
-                    # ignore lines where resistant or susceptible is not called
-                    if len(resistant) != 7 or len(susceptible) != 7:
+                    # ignore lines where resistant or susceptible is busted
+                    if len(resistant) != len(keys) or len(susceptible) != len(keys):
                         continue
                     
                     # convert freq to float
@@ -180,6 +180,4 @@ rule filter_variants:
                         outfile.write(line)
                     elif 100 - params.susceptible_max <= susceptible_freq <= 100 - params.susceptible_min and 100 - params.resistant_max <= resistant_freq <= 100 - params.resistant_min:
                         outfile.write(line)
-                    else:
-                        pass
                     
