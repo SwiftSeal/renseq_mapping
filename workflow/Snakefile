@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 configfile: "config/config.yaml"
 
-experiment = config["experiment_name"]
+experiment_name = config["experiment_name"]
 
 def get_reference():
     return config["reference"]["fasta"]
@@ -14,28 +14,28 @@ def get_reads(wildcards):
     R2 = config[wildcards.source][wildcards.phenotype]["R2"]
     return R1, R2
 
-def get_boundaries(wildcards):
-    susceptible_min = config["allele_frequency"][{wildcards.source}]["susceptible"]["min"]
-    susceptible_max = config["allele_frequency"][{wildcards.source}]["susceptible"]["max"]
-    resistant_min = config["allele_frequency"][{wildcards.source}]["resistant"]["min"]
-    resistant_max = config["allele_frequency"][{wildcards.source}]["resistant"]["max"]
+def get_thresholds(wildcards):
+    susceptible_min = config["allele_frequency"][wildcards.source]["susceptible"]["min"]
+    susceptible_max = config["allele_frequency"][wildcards.source]["susceptible"]["max"]
+    resistant_min = config["allele_frequency"][wildcards.source]["resistant"]["min"]
+    resistant_max = config["allele_frequency"][wildcards.source]["resistant"]["max"]
 
     return susceptible_min, susceptible_max, resistant_min, resistant_max
 
 rule all:
     input:
-        expand("results/{experiment}/filtered/{source}.vcf", source = ["parent", "bulk"], experiment = experiment),
-        expand("results/{experiment}/plots/{source}.png", source = ["parent", "bulk"], experiment = experiment)),
-        expand("results/{experiment}/result.tsv", experiment = experiment)
+        expand("results/{experiment}/filtered/{source}.vcf", source = ["parent", "bulk"], experiment = experiment_name),
+        expand("results/{experiment}/plots/{source}.png", source = ["parent", "bulk"], experiment = experiment_name),
+        expand("results/{experiment}/result.tsv", experiment = experiment_name)
 
 rule get_reference:
     input:
         fasta = get_reference()
     output:
-        "results/{experiment}/reference/reference.fasta"
+        fasta = "results/{experiment}/reference/reference.fasta"
     shell:
         """
-        cp {input.fasta} {output}
+        cp {input.fasta} {output.fasta}
         """
 
 rule bowtie2_index:
@@ -47,6 +47,10 @@ rule bowtie2_index:
         index_directory = "results/{experiment}/reference/reference"
     conda:
         "envs/bowtie2.yaml"
+    threads: 1
+    resources:
+        mem_mb = 8000,
+        partition = "short"
     shell:
         """
         bowtie2-build {input.fasta} {params.index_directory}
@@ -92,7 +96,7 @@ rule mpileup:
         susceptible = "results/{experiment}/bowtie2_align/{source}.susceptible.sorted.bam",
         reference = "results/{experiment}/reference/reference.fasta"
     output:
-        "results/mpileup/{source}.mpileup"
+        "results/{experiment}/mpileup/{source}.mpileup"
     conda:
         "envs/bowtie2.yaml"
     shell:
@@ -161,7 +165,10 @@ rule filter_variants:
     output:
         report("results/{experiment}/filtered/{source}.vcf")
     params:
-        susceptible_min, susceptible_max, resistant_min, resistant_max = get_boundaries
+        susceptible_min = lambda wildcards: get_thresholds(wildcards)[0],
+        susceptible_max = lambda wildcards: get_thresholds(wildcards)[1],
+        resistant_min = lambda wildcards: get_thresholds(wildcards)[2],
+        resistant_max = lambda wildcards: get_thresholds(wildcards)[3]
     run:
         with open(input[0]) as infile, open(output[0], "w") as outfile:
             for line in infile:
@@ -194,7 +201,7 @@ rule filter_variants:
                     
 rule merge_variants:
     input:
-        expand("results/{experiment}/filtered/{source}.vcf", source = ["parent", "bulk"])
+        expand("results/{experiment}/filtered/{source}.vcf", source = ["parent", "bulk"], experiment = experiment_name)
     output:
         report("results/{experiment}/result.tsv")
     run:

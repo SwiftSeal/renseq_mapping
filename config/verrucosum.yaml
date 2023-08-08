@@ -17,7 +17,7 @@ bulk:
     R2: /mnt/shared/scratch/msmith/ver54_renseq_reads/ERR2222743_2.fastq.gz
 reference:
   name: ver54
-  fasta: 
+  fasta: /mnt/shared/scratch/msmith/backup/solanum_verrucosum/ragtag_output/solanum_verrucosum.fasta
 allele_frequency:
   parent:
     susceptible:
