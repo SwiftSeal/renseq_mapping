@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 
 configfile: "config/config.yaml"
 
+experiment = config["experiment_name"]
+
 def get_reference():
     return config["reference"]["fasta"]
 
@@ -12,17 +14,25 @@ def get_reads(wildcards):
     R2 = config[wildcards.source][wildcards.phenotype]["R2"]
     return R1, R2
 
+def get_boundaries(wildcards):
+    susceptible_min = config["allele_frequency"][{wildcards.source}]["susceptible"]["min"]
+    susceptible_max = config["allele_frequency"][{wildcards.source}]["susceptible"]["max"]
+    resistant_min = config["allele_frequency"][{wildcards.source}]["resistant"]["min"]
+    resistant_max = config["allele_frequency"][{wildcards.source}]["resistant"]["max"]
+
+    return susceptible_min, susceptible_max, resistant_min, resistant_max
+
 rule all:
     input:
-        expand("results/filtered/{source}.vcf", source = ["parent", "bulk"]),
-        expand("results/plots/{source}.png", source = ["parent", "bulk"]),
-        "results/results.tsv"
+        expand("results/{experiment}/filtered/{source}.vcf", source = ["parent", "bulk"], experiment = experiment),
+        expand("results/{experiment}/plots/{source}.png", source = ["parent", "bulk"], experiment = experiment)),
+        expand("results/{experiment}/result.tsv", experiment = experiment)
 
 rule get_reference:
     input:
         fasta = get_reference()
     output:
-        "results/reference/reference.fasta"
+        "results/{experiment}/reference/reference.fasta"
     shell:
         """
         cp {input.fasta} {output}
@@ -30,25 +40,28 @@ rule get_reference:
 
 rule bowtie2_index:
     input:
-        fasta = "results/reference/reference.fasta"
+        fasta = "results/{experiment}/reference/reference.fasta"
     output:
-        "results/reference/reference.1.bt2"
+        "results/{experiment}/reference/reference.1.bt2"
+    params:
+        index_directory = "results/{experiment}/reference/reference"
     conda:
         "envs/bowtie2.yaml"
     shell:
         """
-        bowtie2-build {input.fasta} results/reference/reference
+        bowtie2-build {input.fasta} {params.index_directory}
         """
 
 rule bowtie2_align:
     input:
         R1 = lambda wildcards: get_reads(wildcards)[0],
         R2 = lambda wildcards: get_reads(wildcards)[1],
-        index = "results/reference/reference.1.bt2"
+        index = "results/{experiment}/reference/reference.1.bt2"
     output:
-        bam = "results/bowtie2_align/{source}.{phenotype}.bam"
+        bam = "results/{experiment}/bowtie2_align/{source}.{phenotype}.bam"
     params:
-        config["bowtie2_args"]
+        bowtie2_args = config["bowtie2_args"],
+        index_directory = "results/{experiment}/reference/reference"
     conda:
         "envs/bowtie2.yaml"
     threads:
@@ -58,14 +71,14 @@ rule bowtie2_align:
         partition = "short"
     shell:
         """
-        bowtie2 -p {threads} {params} -x results/reference/reference -1 {input.R1} -2 {input.R2} | samtools view -bS - > {output}
+        bowtie2 -p {threads} {params.bowtie2_args} -x {params.index_directory} -1 {input.R1} -2 {input.R2} | samtools view -bS - > {output}
         """
 
 rule sort_bam:
     input:
-        "results/bowtie2_align/{source}.{phenotype}.bam"
+        "results/{experiment}/bowtie2_align/{source}.{phenotype}.bam"
     output:
-        "results/bowtie2_align/{source}.{phenotype}.sorted.bam"
+        "results/{experiment}/bowtie2_align/{source}.{phenotype}.sorted.bam"
     conda:
         "envs/bowtie2.yaml"
     shell:
@@ -75,9 +88,9 @@ rule sort_bam:
 
 rule mpileup:
     input:
-        resistant = "results/bowtie2_align/{source}.resistant.sorted.bam",
-        susceptible = "results/bowtie2_align/{source}.susceptible.sorted.bam",
-        reference = "results/reference/reference.fasta"
+        resistant = "results/{experiment}/bowtie2_align/{source}.resistant.sorted.bam",
+        susceptible = "results/{experiment}/bowtie2_align/{source}.susceptible.sorted.bam",
+        reference = "results/{experiment}/reference/reference.fasta"
     output:
         "results/mpileup/{source}.mpileup"
     conda:
@@ -89,9 +102,9 @@ rule mpileup:
 
 rule varscan:
     input:
-        "results/mpileup/{source}.mpileup"
+        "results/{experiment}/mpileup/{source}.mpileup"
     output:
-        "results/varscan/{source}.vcf"
+        "results/{experiment}/varscan/{source}.vcf"
     conda:
         "envs/bowtie2.yaml"
     shell:
@@ -101,9 +114,9 @@ rule varscan:
 
 rule plot_variants_frequency:
     input:
-        "results/varscan/{source}.vcf"
+        "results/{experiment}/varscan/{source}.vcf"
     output:
-        report("results/plots/{source}.png")
+        report("results/{experiment}/plots/{source}.png")
     run:
         with open(input[0]) as infile:
             source = []
@@ -144,14 +157,11 @@ rule plot_variants_frequency:
     
 rule filter_variants:
     input:
-        "results/varscan/{source}.vcf"
+        "results/{experiment}/varscan/{source}.vcf"
     output:
-        report("results/filtered/{source}.vcf")
+        report("results/{experiment}/filtered/{source}.vcf")
     params:
-        susceptible_min = config["allele_frequency"]["susceptible"]["min"],
-        susceptible_max = config["allele_frequency"]["susceptible"]["max"],
-        resistant_min = config["allele_frequency"]["resistant"]["min"],
-        resistant_max = config["allele_frequency"]["resistant"]["max"]
+        susceptible_min, susceptible_max, resistant_min, resistant_max = get_boundaries
     run:
         with open(input[0]) as infile, open(output[0], "w") as outfile:
             for line in infile:
@@ -184,9 +194,9 @@ rule filter_variants:
                     
 rule merge_variants:
     input:
-        expand("results/filtered/{source}.vcf", source = ["parent", "bulk"])
+        expand("results/{experiment}/filtered/{source}.vcf", source = ["parent", "bulk"])
     output:
-        report("results/result.tsv")
+        report("results/{experiment}/result.tsv")
     run:
         parent_df = pd.read_csv(input[0], sep = "\t", comment = "#", header = None)
         parent_df = parent_df[[0, 1]]

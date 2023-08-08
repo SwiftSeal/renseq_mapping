@@ -1,0 +1,36 @@
+experiment_name: ver54
+parent:
+  resistant:
+    name: ver54
+    R1: /mnt/shared/scratch/msmith/ver54_renseq_reads/ERR2222741_1.fastq.gz
+    R2: /mnt/shared/scratch/msmith/ver54_renseq_reads/ERR2222741_2.fastq.gz
+  susceptible:
+    name: cpc3939
+    R1: /mnt/shared/scratch/msmith/ver54_renseq_reads/ERR2222742_1.fastq.gz
+    R2: /mnt/shared/scratch/msmith/ver54_renseq_reads/ERR2222742_2.fastq.gz
+bulk:
+  resistant:
+    R1: /mnt/shared/scratch/msmith/ver54_renseq_reads/ERR2222744_1.fastq.gz
+    R2: /mnt/shared/scratch/msmith/ver54_renseq_reads/ERR2222744_2.fastq.gz
+  susceptible:
+    R1: /mnt/shared/scratch/msmith/ver54_renseq_reads/ERR2222743_1.fastq.gz
+    R2: /mnt/shared/scratch/msmith/ver54_renseq_reads/ERR2222743_2.fastq.gz
+reference:
+  name: ver54
+  fasta: 
+allele_frequency:
+  parent:
+    susceptible:
+      min: 95
+      max: 100
+    resistant:
+      min: 0
+      max: 5
+  bulk:
+    susceptible:
+      min: 95
+      max: 100
+    resistant:
+      min: 40
+      max: 60
+bowtie2_args: "--score-min L,-0.18,-0.18 --phred33 --fr --maxins 1000 --very-sensitive --no-unal --no-discordant"
