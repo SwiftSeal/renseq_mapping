@@ -2,7 +2,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-configfile: "config/config.yaml"
+configfile: "config/verrucosum.yaml"
 
 experiment_name = config["experiment_name"]
 
@@ -65,7 +65,7 @@ rule fastp:
         R2 = "results/{experiment}/fastp/{source}.{phenotype}.R2.fastq.gz"
 
     conda:
-        "envs/fastp.yaml"
+        "envs/bowtie2.yaml"
     threads:
         4
     resources:
@@ -73,13 +73,13 @@ rule fastp:
         partition = "short"
     shell:
         """
-        fastp -i {input.R1} -I {input.R2} -o {output.R1} -O {output.R2} -h "results/{experiment}/fastp/{source}.{phenotype}.html" -j "results/{experiment}/fastp/{source}.{phenotype}.json"
+        fastp -i {input.R1} -I {input.R2} -o {output.R1} -O {output.R2} -h "results/{wildcards.experiment}/fastp/{wildcards.source}.{wildcards.phenotype}.html" -j "results/{wilcards.experiment}/fastp/{wildcards.source}.{wildcards.phenotype}.json"
         """
 
 rule bowtie2_align:
     input:
         R1 = "results/{experiment}/fastp/{source}.{phenotype}.R1.fastq.gz",
-        R2 = "results/{experiment}/fastp/{source}.{phenotype}.R2.fastq.gz"
+        R2 = "results/{experiment}/fastp/{source}.{phenotype}.R2.fastq.gz",
         index = "results/{experiment}/reference/reference.1.bt2"
     output:
         bam = "results/{experiment}/bowtie2_align/{source}.{phenotype}.bam"
