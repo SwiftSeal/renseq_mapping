@@ -56,10 +56,30 @@ rule bowtie2_index:
         bowtie2-build {input.fasta} {params.index_directory}
         """
 
-rule bowtie2_align:
+rule fastp:
     input:
         R1 = lambda wildcards: get_reads(wildcards)[0],
-        R2 = lambda wildcards: get_reads(wildcards)[1],
+        R2 = lambda wildcards: get_reads(wildcards)[1]
+    output:
+        R1 = "results/{experiment}/fastp/{source}.{phenotype}.R1.fastq.gz",
+        R2 = "results/{experiment}/fastp/{source}.{phenotype}.R2.fastq.gz"
+
+    conda:
+        "envs/fastp.yaml"
+    threads:
+        4
+    resources:
+        mem_mb = 4000,
+        partition = "short"
+    shell:
+        """
+        fastp -i {input.R1} -I {input.R2} -o {output.R1} -O {output.R2} -h "results/{experiment}/fastp/{source}.{phenotype}.html" -j "results/{experiment}/fastp/{source}.{phenotype}.json"
+        """
+
+rule bowtie2_align:
+    input:
+        R1 = "results/{experiment}/fastp/{source}.{phenotype}.R1.fastq.gz",
+        R2 = "results/{experiment}/fastp/{source}.{phenotype}.R2.fastq.gz"
         index = "results/{experiment}/reference/reference.1.bt2"
     output:
         bam = "results/{experiment}/bowtie2_align/{source}.{phenotype}.bam"
