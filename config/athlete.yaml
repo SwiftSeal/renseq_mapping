@@ -1,3 +1,4 @@
+experiment_name: athlete
 parent:
   resistant:
     name: athlete
@@ -18,10 +19,18 @@ reference:
   name: athlete_hifi
   fasta: /mnt/shared/scratch/tadams/smrtrenseq_assembly/assembly/Athlete/Athlete.contigs.fasta
 allele_frequency:
-  susceptible:
-    min: 95
-    max: 100
-  resistant:
-    min: 20
-    max: 30
+  parent:
+    susceptible:
+      min: 95
+      max: 100
+    resistant:
+      min: 0
+      max: 5
+  bulk:
+    susceptible:
+      min: 95
+      max: 100
+    resistant:
+      min: 40
+      max: 60
 bowtie2_args: "--score-min L,-0.18,-0.18 --phred33 --fr --maxins 1000 --very-sensitive --no-unal --no-discordant"
