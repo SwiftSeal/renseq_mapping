@@ -2,7 +2,13 @@
 
 This is a small pipeline that simplifies the RenSeq association mapping protocol.
 
-## Prerequisites 
+## A note on conda
+
+I highly recommend you install [mamba](https://github.com/conda-forge/miniforge#mambaforge) rather than relying on conda.
+It's a lot faster than mamba.
+Follow the instructions in the link to get started.
+
+## Prerequisites
 
 This pipeline utilises [snakemake](https://snakemake.readthedocs.io/en/stable/) to handle all the data analysis.
 To easily handle this, a base environment `snakemake-env.yaml` has been provided with all required dependencies.
