@@ -1,3 +1,5 @@
+[![Code style: snakefmt](https://img.shields.io/badge/code%20style-snakefmt-000000.svg)](https://github.com/snakemake/snakefmt)
+
 # RenSeq association mapping pipeline
 
 This is a small pipeline that simplifies the RenSeq association mapping protocol.
