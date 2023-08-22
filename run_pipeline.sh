@@ -26,7 +26,9 @@ if [[ ! "$1" =~ \.yaml$ ]]; then
     exit 1
 fi
 
-micromamba run -n snakemake snakemake --profile ~/.config/snakemake/slurm --configfile $1
+source activate snakemake
+
+snakemake --profile ~/.config/snakemake/slurm --configfile $1
 
 echo """
    _____  ____   ____  _____  ______     ________ 
