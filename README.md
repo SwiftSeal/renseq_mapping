@@ -12,6 +12,8 @@ To create this, run the following command:
 conda env create -f snakemake-env.yaml
 ```
 
+*If you are running this on a shared resource e.g., the Crop Diversity HPC, please do this in a `srsh` job. It can take >16GB memory to build this environment*
+
 This will create an environment `snakemake` which should have everything you need installed.
 It is automatically activated in the run_snakemake.sh script.
 This pipeline was designed to run in a [SLURM environment](https://slurm.schedmd.com/documentation.html).
@@ -89,5 +91,6 @@ To run the pipeline:
 `sbatch run_pipeline <experiment.yaml>`
 
 This will submit the job to the SLURM system.
+To monitor the status of your analysis, check out the `.err` and `.out` files produced by the `sbatch` job.
 It should take <6 hours to run.
-Results will be under the `results/` directory.
+Results will be under the `results/` directory!
