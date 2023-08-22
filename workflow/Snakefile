@@ -2,7 +2,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-configfile: "config/verrucosum.yaml"
+configfile: "athlete.yaml"
 
 experiment_name = config["experiment_name"]
 
@@ -73,7 +73,7 @@ rule fastp:
         partition = "short"
     shell:
         """
-        fastp -i {input.R1} -I {input.R2} -o {output.R1} -O {output.R2} -h "results/{wildcards.experiment}/fastp/{wildcards.source}.{wildcards.phenotype}.html" -j "results/{wilcards.experiment}/fastp/{wildcards.source}.{wildcards.phenotype}.json"
+        fastp -i {input.R1} -I {input.R2} -o {output.R1} -O {output.R2} -h "results/{wildcards.experiment}/fastp/{wildcards.source}.{wildcards.phenotype}.html" -j "results/{wildcards.experiment}/fastp/{wildcards.source}.{wildcards.phenotype}.json"
         """
 
 rule bowtie2_align:
