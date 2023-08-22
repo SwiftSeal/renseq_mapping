@@ -4,7 +4,7 @@
 on:
   push:
   pull_request:
-    branches: [master, main]
+    branches: master
 
 ###############
 # Set the Job #
@@ -46,5 +46,5 @@ jobs:
         env:
           VALIDATE_ALL_CODEBASE: false
           # Change to 'master' if your main branch differs
-          DEFAULT_BRANCH: main
+          DEFAULT_BRANCH: master
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
