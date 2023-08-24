@@ -28,7 +28,7 @@ fi
 
 source activate snakemake
 
-snakemake --profile ~/.config/snakemake/slurm --configfile $1
+snakemake --nolock --profile ~/.config/snakemake/slurm --configfile $1
 
 echo """
    _____  ____   ____  _____  ______     ________ 
