@@ -6,6 +6,7 @@ channels:
 dependencies:
  - snakemake
  - cookiecutter
+ - biopython
  - seaborn
  - matplotlib-base
  - pandas

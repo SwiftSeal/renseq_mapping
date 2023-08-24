@@ -18,7 +18,7 @@ To create this, run the following command:
 conda env create -f snakemake-env.yaml
 ```
 
-*If you are running this on a shared resource e.g., the Crop Diversity HPC, please do this in a `srsh` job. It can take >16GB memory to build this environment*
+*If you are running this on a shared resource e.g., the Crop Diversity HPC, please do this in a `srsh` job. It can take >16GB memory to build this environment. Also note that I haven't added strict versions in the environment - this may need to be included if the any dependencies undergo signficant updates.*
 
 This will create an environment `snakemake` which should have everything you need installed.
 It is automatically activated in the run_snakemake.sh script.
@@ -89,6 +89,7 @@ I recommend that you provide full paths rather than relative paths.
 The allele frequencies can be adjusted as desired - the reciprocal allele frequencies are handled automatically.
 You can either leave the `bowtie2_args` as is or modify them.
 The arguments above are suitable for analysis at a 3% mismatch rate.
+Compressed `.fasta` files are currently unsupported!
 
 ## Running the pipeline
 
@@ -98,5 +99,10 @@ To run the pipeline:
 
 This will submit the job to the SLURM system.
 To monitor the status of your analysis, check out the `.err` and `.out` files produced by the `sbatch` job.
-It should take <6 hours to run.
+It should take <4 hours to run.
 Results will be under the `results/` directory!
+
+Multiple experiments can be run simultaneously as I have enabled `--nolock` for snakemake.
+**The pipeline will break if two experiments are run simultaneously with the same experiment name.**
+If you are running the pipeline for the first time, only submit one experiment to start with as snakemake will initially need to build the required conda environments.
+This process may experience issues if two snakemake processes try to do this at the same time.

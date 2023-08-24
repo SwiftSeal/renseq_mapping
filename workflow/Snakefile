@@ -82,7 +82,7 @@ rule bowtie2_align:
         R2 = "results/{experiment}/fastp/{source}.{phenotype}.R2.fastq.gz",
         index = "results/{experiment}/reference/reference.1.bt2"
     output:
-        bam = "results/{experiment}/bowtie2_align/{source}.{phenotype}.bam"
+        bam = temp("results/{experiment}/bowtie2_align/{source}.{phenotype}.bam")
     params:
         bowtie2_args = config["bowtie2_args"],
         index_directory = "results/{experiment}/reference/reference"
@@ -102,7 +102,7 @@ rule sort_bam:
     input:
         "results/{experiment}/bowtie2_align/{source}.{phenotype}.bam"
     output:
-        "results/{experiment}/bowtie2_align/{source}.{phenotype}.sorted.bam"
+        temp("results/{experiment}/bowtie2_align/{source}.{phenotype}.sorted.bam")
     conda:
         "envs/bowtie2.yaml"
     shell:
@@ -116,7 +116,7 @@ rule mpileup:
         susceptible = "results/{experiment}/bowtie2_align/{source}.susceptible.sorted.bam",
         reference = "results/{experiment}/reference/reference.fasta"
     output:
-        "results/{experiment}/mpileup/{source}.mpileup"
+        temp("results/{experiment}/mpileup/{source}.mpileup")
     conda:
         "envs/bowtie2.yaml"
     shell:
