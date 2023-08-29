@@ -3,8 +3,6 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from Bio import SeqIO
 
-configfile: "athlete.yaml"
-
 experiment_name = config["experiment_name"]
 
 def get_reference():
@@ -29,7 +27,7 @@ if config["mode"] == "mapping":
             expand("results/{experiment}/filtered/{source}.vcf", source = ["parent", "bulk"], experiment = experiment_name),
             expand("results/{experiment}/plots/{source}.png", source = ["parent", "bulk"], experiment = experiment_name),
             expand("results/{experiment}/result.tsv", experiment = experiment_name),
-            "results/{experiment}/minimap2_align/{source}.sam"
+            expand("results/{experiment}/minimap2_align.sam", experiment = experiment_name)
 elif config["mode"] == "standard":
     rule all:
         input:
@@ -277,7 +275,7 @@ rule minimap2:
         contigs = "results/{experiment}/reference/filtered_reference.fasta",
         reference = config["mapping_reference"]
     output:
-        sam = "results/{experiment}/minimap2_align/{source}.sam"
+        sam = "results/{experiment}/minimap2_align.sam"
     conda:
         "envs/bowtie2.yaml"
     threads: 4
