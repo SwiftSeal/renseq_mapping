@@ -17,7 +17,7 @@ To easily handle this, a base environment `snakemake-env.yaml` has been provided
 To create this, run the following command:
 
 ```
-conda env create -f snakemake-env.yaml
+mamba env create -f snakemake-env.yaml
 ```
 
 *If you are running this on a shared resource e.g., the Crop Diversity HPC, please do this in a `srsh` job. It can take >16GB memory to build this environment. Also note that I haven't added strict versions in the environment - this may need to be included if the any dependencies undergo signficant updates.*
