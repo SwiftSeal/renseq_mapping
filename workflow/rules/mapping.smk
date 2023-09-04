@@ -19,7 +19,7 @@ rule get_contigs:
 
 rule blast:
     input:
-        contigs = get_reference(),
+        contigs = "results/{experiment}/reference/filtered_reference.fasta",
         reference = config["mapping_reference"]
     output:
         "results/{experiment}/blast.txt"
