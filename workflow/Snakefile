@@ -22,7 +22,7 @@ def get_thresholds(wildcards):
     return susceptible_min, susceptible_max, resistant_min, resistant_max
 
 if config["mode"] == "mapping":
-    include "rules/mapping.smk"
+    include: "rules/mapping.smk"
     rule all:
         input:
             expand("results/{experiment}/filtered/{source}.vcf", source = ["parent", "bulk"], experiment = experiment_name),
@@ -42,7 +42,7 @@ rule bowtie2_index:
     input:
         fasta = get_reference()
     output:
-        expand("results/{experiment}/reference/reference.{i}.bt2", i = [1, 2, 3, 4, "rev.1", "rev.2"])
+        expand("results/{experiment}/reference/reference.{i}.bt2", i = [1, 2, 3, 4, "rev.1", "rev.2"], experiment = experiment_name)
     params:
         index_directory = "results/{experiment}/reference/reference"
     conda:
