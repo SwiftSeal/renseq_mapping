@@ -22,6 +22,7 @@ def get_thresholds(wildcards):
     return susceptible_min, susceptible_max, resistant_min, resistant_max
 
 if config["mode"] == "mapping":
+    include "rules/mapping.smk"
     rule all:
         input:
             expand("results/{experiment}/filtered/{source}.vcf", source = ["parent", "bulk"], experiment = experiment_name),
@@ -37,21 +38,11 @@ elif config["mode"] == "standard":
 else:
     raise ValueError("Invalid mode specified in config file")
 
-rule get_reference:
+rule bowtie2_index:
     input:
         fasta = get_reference()
     output:
-        fasta = "results/{experiment}/reference/reference.fasta"
-    shell:
-        """
-        cp {input.fasta} {output.fasta}
-        """
-
-rule bowtie2_index:
-    input:
-        fasta = "results/{experiment}/reference/reference.fasta"
-    output:
-        "results/{experiment}/reference/reference.1.bt2"
+        expand("results/{experiment}/reference/reference.{i}.bt2", i = [1, 2, 3, 4, "rev.1", "rev.2"])
     params:
         index_directory = "results/{experiment}/reference/reference"
     conda:
@@ -70,8 +61,8 @@ rule fastp:
         R1 = lambda wildcards: get_reads(wildcards)[0],
         R2 = lambda wildcards: get_reads(wildcards)[1]
     output:
-        R1 = "results/{experiment}/fastp/{source}.{phenotype}.R1.fastq.gz",
-        R2 = "results/{experiment}/fastp/{source}.{phenotype}.R2.fastq.gz"
+        R1 = temp("results/{experiment}/fastp/{source}.{phenotype}.R1.fastq.gz"),
+        R2 = temp("results/{experiment}/fastp/{source}.{phenotype}.R2.fastq.gz")
 
     conda:
         "envs/bowtie2.yaml"
@@ -123,7 +114,7 @@ rule mpileup:
     input:
         resistant = "results/{experiment}/bowtie2_align/{source}.resistant.sorted.bam",
         susceptible = "results/{experiment}/bowtie2_align/{source}.susceptible.sorted.bam",
-        reference = "results/{experiment}/reference/reference.fasta"
+        reference = get_reference()
     output:
         temp("results/{experiment}/mpileup/{source}.mpileup")
     conda:
@@ -250,39 +241,3 @@ rule merge_variants:
 
         # write out
         intersect.to_csv(output[0], sep = "\t", index = False)
-                
-rule get_contigs:
-    input:
-        contigs = "results/{experiment}/reference/reference.fasta",
-        result = "results/{experiment}/result.tsv"
-    output:
-        filtered_contigs = "results/{experiment}/reference/filtered_reference.fasta"
-    run:
-        with open(input.contigs) as fasta, open(input.result) as result, open(output.filtered_contigs, "w") as filtered:
-            # get contigs to keep
-            contigs = set()
-            for line in result:
-                fields = line.split("\t")
-                contigs.add(fields[0])
-            
-            # write out contigs
-            for record in SeqIO.parse(fasta, "fasta"):
-                if record.id in contigs:
-                    SeqIO.write(record, filtered, "fasta")
-
-rule blast:
-    input:
-        contigs = "results/{experiment}/reference/filtered_reference.fasta",
-        reference = config["mapping_reference"]
-    output:
-        "results/{experiment}/blast.txt"
-    conda:
-        "envs/bowtie2.yaml"
-    threads: 4
-    resources:
-        mem_mb = 4000,
-        partition = "short"
-    shell:
-        """
-        blastn -query {input.contigs} -subject {input.reference} -outfmt 6 -out {output}
-        """
