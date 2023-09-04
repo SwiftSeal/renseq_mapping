@@ -1,6 +1,6 @@
 rule get_contigs:
     input:
-        contigs = "results/{experiment}/reference/reference.fasta",
+        contigs = get_reference(),
         result = "results/{experiment}/result.tsv"
     output:
         filtered_contigs = "results/{experiment}/reference/filtered_reference.fasta"

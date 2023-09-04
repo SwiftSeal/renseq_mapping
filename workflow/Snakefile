@@ -38,22 +38,9 @@ elif config["mode"] == "standard":
 else:
     raise ValueError("Invalid mode specified in config file")
 
-rule copy_reference:
-    input:
-        get_reference()
-    output:
-        "results/{experiment}/reference/reference.fasta"
-    resources:
-        mem_mb = 1000,
-        partition = "short"
-    shell:
-        """
-        cp {input} {output}
-        """
-
 rule bowtie2_index:
     input:
-        fasta = "results/{experiment}/reference/reference.fasta"
+        fasta = get_reference()
     output:
         expand("results/{experiment}/reference/reference.{i}.bt2", i = [1, 2, 3, 4, "rev.1", "rev.2"], experiment = experiment_name)
     params:
@@ -127,14 +114,15 @@ rule mpileup:
     input:
         resistant = "results/{experiment}/bowtie2_align/{source}.resistant.sorted.bam",
         susceptible = "results/{experiment}/bowtie2_align/{source}.susceptible.sorted.bam",
-        reference = "results/{experiment}/reference/reference.fasta"
+        reference = get_reference()
     output:
         temp("results/{experiment}/mpileup/{source}.mpileup")
     conda:
         "envs/bowtie2.yaml"
     shell:
         """
-        samtools mpileup -f {input.reference} {input.resistant} {input.susceptible} > {output}
+        cp {input.reference} $TMPDIR/reference.fa
+        samtools mpileup -f $TMPDIR/reference.fa {input.resistant} {input.susceptible} > {output}
         """
 
 rule varscan:
