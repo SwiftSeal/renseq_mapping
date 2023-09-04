@@ -32,7 +32,10 @@ rule get_reference:
     input:
         fasta = get_reference()
     output:
-        fasta = "results/{experiment}/reference/reference.fasta"
+        fasta = temp("results/{experiment}/reference/reference.fasta")
+    resources:
+        partition = "short",
+        mem_mb = 1000
     shell:
         """
         cp {input.fasta} {output.fasta}
@@ -42,7 +45,12 @@ rule bowtie2_index:
     input:
         fasta = "results/{experiment}/reference/reference.fasta"
     output:
-        "results/{experiment}/reference/reference.1.bt2"
+        1_forward = temp("results/{experiment}/reference/reference.1.bt2"),
+        2_forward = temp("results/{experiment}/reference/reference.2.bt2"),
+        3_forward = temp("results/{experiment}/reference/reference.3.bt2"),
+        4_forward = temp("results/{experiment}/reference/reference.4.bt2"),
+        1_reverse = temp("results/{experiment}/reference/reference.rev.1.bt2"),
+        2_reverse = temp("results/{experiment}/reference/reference.rev.2.bt2")
     params:
         index_directory = "results/{experiment}/reference/reference"
     conda:
@@ -61,8 +69,8 @@ rule fastp:
         R1 = lambda wildcards: get_reads(wildcards)[0],
         R2 = lambda wildcards: get_reads(wildcards)[1]
     output:
-        R1 = "results/{experiment}/fastp/{source}.{phenotype}.R1.fastq.gz",
-        R2 = "results/{experiment}/fastp/{source}.{phenotype}.R2.fastq.gz"
+        R1 = temp("results/{experiment}/fastp/{source}.{phenotype}.R1.fastq.gz"),
+        R2 = temp("results/{experiment}/fastp/{source}.{phenotype}.R2.fastq.gz")
 
     conda:
         "envs/bowtie2.yaml"
@@ -80,7 +88,13 @@ rule bowtie2_align:
     input:
         R1 = "results/{experiment}/fastp/{source}.{phenotype}.R1.fastq.gz",
         R2 = "results/{experiment}/fastp/{source}.{phenotype}.R2.fastq.gz",
-        index = "results/{experiment}/reference/reference.1.bt2"
+        1_forward = "results/{experiment}/reference/reference.1.bt2",
+        2_forward = "results/{experiment}/reference/reference.2.bt2",
+        3_forward = "results/{experiment}/reference/reference.3.bt2",
+        4_forward = "results/{experiment}/reference/reference.4.bt2",
+        1_reverse = "results/{experiment}/reference/reference.rev.1.bt2",
+        2_reverse = "results/{experiment}/reference/reference.rev.2.bt2"
+        fasta = "results/{experiment}/reference/reference.fasta"
     output:
         bam = temp("results/{experiment}/bowtie2_align/{source}.{phenotype}.bam")
     params:
