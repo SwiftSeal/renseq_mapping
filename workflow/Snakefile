@@ -121,6 +121,7 @@ rule mpileup:
         "envs/bowtie2.yaml"
     shell:
         """
+        # mpileup builds an index at location of reference, so copy to tmpdir
         cp {input.reference} $TMPDIR/reference.fa
         samtools mpileup -f $TMPDIR/reference.fa {input.resistant} {input.susceptible} > {output}
         """
