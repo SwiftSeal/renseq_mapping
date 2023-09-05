@@ -24,7 +24,7 @@ rule blast:
     output:
         "results/{experiment}/blast.txt"
     conda:
-        "envs/bowtie2.yaml"
+        "../envs/bowtie2.yaml"
     resources:
         mem_mb = 4000,
         partition = "short"

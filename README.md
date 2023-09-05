@@ -50,6 +50,8 @@ Here is an example:
 
 ```
 experiment_name: myexperiment
+mode: mapping
+mapping_reference: path/to/nice_genome.fa
 parent:
   resistant:
     name: cool_resistant_plant
@@ -91,7 +93,14 @@ I recommend that you provide full paths rather than relative paths.
 The allele frequencies can be adjusted as desired - the reciprocal allele frequencies are handled automatically.
 You can either leave the `bowtie2_args` as is or modify them.
 The arguments above are suitable for analysis at a 3% mismatch rate.
-Compressed `.fasta` files are currently unsupported!
+Compressed `.fasta` reference files are currently unsupported!
+
+There are two modes available - `mapping` and `standard`.
+In `standard` mode, variants are calculated and filtered.
+This is a suitable mode when the reference is for example a whole genome.
+If you are using `standard`, you don't need to provide a `mapping_reference` in the configuration file.
+The `mapping` mode is to be used when you are working with SMRT-RenSeq contigs and are interested in extracting and BLASTing them against a reference genome.
+When running in `mapping` mode please provide a reference genome with the `mapping_reference` configuration option.
 
 ## Running the pipeline
 
