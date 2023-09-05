@@ -1,8 +1,7 @@
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-
-configfile: "athlete.yaml"
+from Bio import SeqIO
 
 experiment_name = config["experiment_name"]
 
@@ -22,29 +21,30 @@ def get_thresholds(wildcards):
 
     return susceptible_min, susceptible_max, resistant_min, resistant_max
 
-rule all:
-    input:
-        expand("results/{experiment}/filtered/{source}.vcf", source = ["parent", "bulk"], experiment = experiment_name),
-        expand("results/{experiment}/plots/{source}.png", source = ["parent", "bulk"], experiment = experiment_name),
-        expand("results/{experiment}/result.tsv", experiment = experiment_name)
-
-rule get_reference:
-    input:
-        fasta = get_reference()
-    output:
-        fasta = "results/{experiment}/reference/reference.fasta"
-    shell:
-        """
-        cp {input.fasta} {output.fasta}
-        """
+if config["mode"] == "mapping":
+    include: "rules/mapping.smk"
+    rule all:
+        input:
+            expand("results/{experiment}/filtered/{source}.vcf", source = ["parent", "bulk"], experiment = experiment_name),
+            expand("results/{experiment}/plots/{source}.png", source = ["parent", "bulk"], experiment = experiment_name),
+            expand("results/{experiment}/result.tsv", experiment = experiment_name),
+            expand("results/{experiment}/blast.txt", experiment = experiment_name)
+elif config["mode"] == "standard":
+    rule all:
+        input:
+            expand("results/{experiment}/filtered/{source}.vcf", source = ["parent", "bulk"], experiment = experiment_name),
+            expand("results/{experiment}/plots/{source}.png", source = ["parent", "bulk"], experiment = experiment_name),
+            expand("results/{experiment}/result.tsv", experiment = experiment_name)
+else:
+    raise ValueError("Invalid mode specified in config file")
 
 rule bowtie2_index:
     input:
-        fasta = "results/{experiment}/reference/reference.fasta"
+        fasta = get_reference()
     output:
-        "results/{experiment}/reference/reference.1.bt2"
+        expand("results/{experiment}/reference/reference.{i}.bt2", i = [1, 2, 3, 4, "rev.1", "rev.2"], experiment = experiment_name)
     params:
-        index_directory = "results/{experiment}/reference/reference"
+        index_directory = expand("results/{experiment}/reference/reference", experiment = experiment_name)
     conda:
         "envs/bowtie2.yaml"
     threads: 1
@@ -61,8 +61,8 @@ rule fastp:
         R1 = lambda wildcards: get_reads(wildcards)[0],
         R2 = lambda wildcards: get_reads(wildcards)[1]
     output:
-        R1 = "results/{experiment}/fastp/{source}.{phenotype}.R1.fastq.gz",
-        R2 = "results/{experiment}/fastp/{source}.{phenotype}.R2.fastq.gz"
+        R1 = temp("results/{experiment}/fastp/{source}.{phenotype}.R1.fastq.gz"),
+        R2 = temp("results/{experiment}/fastp/{source}.{phenotype}.R2.fastq.gz")
 
     conda:
         "envs/bowtie2.yaml"
@@ -114,14 +114,16 @@ rule mpileup:
     input:
         resistant = "results/{experiment}/bowtie2_align/{source}.resistant.sorted.bam",
         susceptible = "results/{experiment}/bowtie2_align/{source}.susceptible.sorted.bam",
-        reference = "results/{experiment}/reference/reference.fasta"
+        reference = get_reference()
     output:
         temp("results/{experiment}/mpileup/{source}.mpileup")
     conda:
         "envs/bowtie2.yaml"
     shell:
         """
-        samtools mpileup -f {input.reference} {input.resistant} {input.susceptible} > {output}
+        # mpileup builds an index at location of reference, so copy to tmpdir
+        cp {input.reference} $TMPDIR/reference.fa
+        samtools mpileup -f $TMPDIR/reference.fa {input.resistant} {input.susceptible} > {output}
         """
 
 rule varscan:
@@ -241,4 +243,3 @@ rule merge_variants:
 
         # write out
         intersect.to_csv(output[0], sep = "\t", index = False)
-                
