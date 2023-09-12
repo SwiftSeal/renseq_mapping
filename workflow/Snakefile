@@ -35,6 +35,16 @@ elif config["mode"] == "standard":
             expand("results/{experiment}/filtered/{source}.vcf", source = ["parent", "bulk"], experiment = experiment_name),
             expand("results/{experiment}/plots/{source}.png", source = ["parent", "bulk"], experiment = experiment_name),
             expand("results/{experiment}/result.tsv", experiment = experiment_name)
+elif config["mode"] == "report":
+    rule all:
+        input:
+            expand("results/{experiment}/filtered/{source}.vcf", source = ["parent", "bulk"], experiment = experiment_name),
+            expand("results/{experiment}/plots/{source}.png". source = ["parent", "bulk"], experiment = experiment_name),
+            expand("results/{experiment}/result.tsv", experiment = experiment_name),
+            expand("results/{experiment}/result_repulsion.tsv", experiment = experiment_name),
+            expand("results/{experiment}/result_null.tsv", experiment = experiment_name)
+            expand("results/{experiment}/blast_plot.png", experiment = experiment_name),
+            expand("results/{experiment}/report.txt", experiment = experiment_name)
 else:
     raise ValueError("Invalid mode specified in config file")
 
