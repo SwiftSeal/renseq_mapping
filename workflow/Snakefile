@@ -86,6 +86,24 @@ rule fastp:
         fastp -i {input.R1} -I {input.R2} -o {output.R1} -O {output.R2} -h "results/{wildcards.experiment}/fastp/{wildcards.source}.{wildcards.phenotype}.html" -j "results/{wildcards.experiment}/fastp/{wildcards.source}.{wildcards.phenotype}.json"
         """
 
+rule count_reads:
+    input:
+        R1 = "results/{experiment}/fastp/{source}.{phenotype}.R1.fastq.gz",
+        R2 = "results/{experiment}/fastp/{source}.{phenotype}.R2.fastq.gz"
+    output:
+        counts = "results/{experiment}/read_counts/{source}.{phenotype}.readcounts.txt"
+    resources:
+        mem_mb = 4000,
+        partition = "short"
+    shell:
+        """
+        R1_count=$(echo $(zcat {input.R1} | wc -l)/4 | bc)
+        R2_count=$(echo $(scat {input.R2} | wc -l)/4 | bc)
+        printf "{source}\t{phenotype}" > {output}
+        printf "R1\t$R1_count" >> {output}
+        printf "R2\t$R2_count" >> {output}
+        """
+
 rule bowtie2_align:
     input:
         R1 = "results/{experiment}/fastp/{source}.{phenotype}.R1.fastq.gz",
