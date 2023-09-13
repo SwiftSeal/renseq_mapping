@@ -91,9 +91,9 @@ rule count_reads:
         R1 = "results/{experiment}/fastp/{source}.{phenotype}.R1.fastq.gz",
         R2 = "results/{experiment}/fastp/{source}.{phenotype}.R2.fastq.gz"
     output:
-        counts = "results/{experiment}/read_counts/{source}.{phenotype}.readcounts.txt"
+        counts = temp("results/{experiment}/reporting/read_counts/{source}.{phenotype}.readcounts.txt")
     resources:
-        mem_mb = 4000,
+        mem_mb = 1000,
         partition = "short"
     shell:
         """
@@ -247,6 +247,23 @@ rule filter_variants:
                         outfile.write(line)
                     elif 100 - params.susceptible_max <= susceptible_freq <= 100 - params.susceptible_min and 100 - params.resistant_max <= resistant_freq <= 100 - params.resistant_min:
                         outfile.write(line)
+
+rule quantify_snps:
+    input:
+        unfiltered = "results/{experiment}/varscan/{source}.vcf",
+        filtered = "results/{experiment}/filtered/{source}.vcf"
+
+    output:
+        unfiltered = temp("results/{experiment}/reporting/snp_counts/{source}.unfiltered.snpcounts.txt"),
+        filtered = temp("results/{experiment}/reporting/snp_counts/{source}.filtered.snpcounts.txt")
+    resources:
+        mem_mb = 1000,
+        partition = "short"
+    shell:
+        """
+        cat {input.unfiltered} | grep -v "#" | wc -l > {output.unfiltered}
+        cat {input.filtered} | grep -v "#" | wc -l > {output.filtered}
+        """
                     
 rule merge_variants:
     input:
