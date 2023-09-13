@@ -99,8 +99,7 @@ rule count_reads:
         """
         R1_count=$(echo $(zcat {input.R1} | wc -l)/4 | bc)
         R2_count=$(echo $(scat {input.R2} | wc -l)/4 | bc)
-        printf "{source}\t{phenotype}" > {output}
-        printf "R1\t$R1_count" >> {output}
+        printf "R1\t$R1_count" > {output}
         printf "R2\t$R2_count" >> {output}
         """
 
