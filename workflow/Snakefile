@@ -287,3 +287,19 @@ rule merge_variants:
 
         # write out
         intersect.to_csv(output[0], sep = "\t", index = False)
+
+rule identify_SNPs_in_NLRs:
+    input:
+        nlr_bed = config["nlr_bed"]
+        vcf = "results/{experiment}/result.tsv"
+    output:
+        snps = "results/{experiment}/interesting_snps.txt"
+    params:
+        flanking = config["distance_to_be_near_nlrs"]
+    resources:
+        mem_mb = 2000,
+        partition = "short"
+    shell:
+        """
+        python workflow/scripts/find_interesting_snps_biparental.py --input_SNPs {input.vcf} --input_NLRs {input.nlr_bed} --output {output.snps} --flanking {params.flanking}
+        """
