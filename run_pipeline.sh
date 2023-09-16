@@ -3,7 +3,7 @@
 #SBATCH -J renseq_mapping
 #SBATCH -p long
 #SBATCH -c 1
-#SBATCH --mem=4G
+#SBATCH --mem=8G
 #SBATCH --export=ALL
 #SBATCH -o renseq_mapping.%j.out
 #SBATCH -e renseq_mapping.%j.err
