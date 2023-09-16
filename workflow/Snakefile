@@ -368,6 +368,25 @@ rule report_plot:
         Rscript --vanilla workflow/scripts/blast_plot.R {input.genome_size} {input.blast_result} {params.experiment_name} {output.plot}
         """
 
+rule get_contigs:
+    input:
+        contigs = get_reference(),
+        result = "results/{experiment}/result.tsv"
+    output:
+        filtered_contigs = "results/{experiment}/reference/filtered_reference.fasta"
+    run:
+        with open(input.contigs) as fasta, open(input.result) as result, open(output.filtered_contigs, "w") as filtered:
+            # get contigs to keep
+            contigs = set()
+            for line in result:
+                fields = line.split("\t")
+                contigs.add(fields[0])
+            
+            # write out contigs
+            for record in SeqIO.parse(fasta, "fasta"):
+                if record.id in contigs:
+                    SeqIO.write(record, filtered, "fasta")
+
 rule blast:
     input:
         contigs = "results/{experiment}/reference/filtered_reference.fasta",
