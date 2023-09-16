@@ -30,5 +30,5 @@ rule blast:
         partition = "short"
     shell:
         """
-        blastn -query {input.contigs} -subject {input.reference} -outfmt 6 | sort -k1,1 -k12,12nr -k11,11n | sort -u -k1,1 --merge > {output}
+        blastn -query {input.contigs} -subject {input.reference} -outfmt 6 -out {output}
         """
