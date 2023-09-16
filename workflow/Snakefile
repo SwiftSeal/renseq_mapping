@@ -252,7 +252,6 @@ rule quantify_snps:
     input:
         unfiltered = "results/{experiment}/varscan/{source}.vcf",
         filtered = "results/{experiment}/filtered/{source}.vcf"
-
     output:
         unfiltered = temp("results/{experiment}/reporting/snp_counts/{source}.unfiltered.snpcounts.txt"),
         filtered = temp("results/{experiment}/reporting/snp_counts/{source}.filtered.snpcounts.txt")
@@ -290,7 +289,7 @@ rule merge_variants:
 
 rule identify_SNPs_in_NLRs:
     input:
-        nlr_bed = config["nlr_bed"]
+        nlr_bed = config["nlr_bed"],
         vcf = "results/{experiment}/result.tsv"
     output:
         snps = "results/{experiment}/interesting_snps.txt"
@@ -302,4 +301,35 @@ rule identify_SNPs_in_NLRs:
     shell:
         """
         python workflow/scripts/find_interesting_snps_biparental.py --input_SNPs {input.vcf} --input_NLRs {input.nlr_bed} --output {output.snps} --flanking {params.flanking}
+        """
+
+rule create_report:
+    input:
+        read_counts = expand("results/{experiment}/reporting/read_counts/{source}.{phenotype}.readcounts.txt", source = ["parent", "bulk"], experiment = experiment_name, phenotype = ["resistant", "susceptible"]),
+        snp_counts = expand("results/{experiment}/reporting/snp_counts/{source}.{filtering}.snpcounts.txt", experiment = experiment_name, source = ["parent", "bulk"], filtering = ["filtered", "unfiltered"]),
+        interesting_snps = "results/{experiment}/interesting_snps.txt",
+        blast_results = "results/{experiment}/blast.txt"
+    output:
+        report = "results/{experiment}/reporting/report.txt"
+    params:
+        experiment_name = config["experiment_name"],
+        R_parent_name = config["parent"]["resistant"]["name"],
+        S_parent_name = config["parent"]["susceptible"]["name"],
+        R_bulk_path = config["bulk"]["resistant"]["R1"],
+        S_bulk_path = config["bulk"]["susceptible"]["R1"],
+        reference_name = config["reference"]["name"],
+        parent_S_min = config["allele_frequency"]["parent"]["susceptible"]["min"],
+        parent_S_max = config["allele_frequency"]["parent"]["susceptible"]["max"],
+        parent_R_min = config["allele_frequency"]["parent"]["resistant"]["min"],
+        parent_R_max = config["allele_frequency"]["parent"]["resistant"]["max"],
+        bulk_S_min = config["allele_frequency"]["bulk"]["susceptible"]["min"],
+        bulk_S_max = config["allele_frequency"]["bulk"]["susceptible"]["max"],
+        bulk_R_min = config["allele_frequency"]["bulk"]["resistant"]["min"],
+        bulk_R_max = config["allele_frequency"]["bulk"]["resistant"]["max"]
+    resources:
+        mem_mb = 2000,
+        partition = "short"
+    shell:
+        """
+        python3 workflow/scripts/create_biparental_report.py --output {output.report} --read_counts {input.read_counts} --experiment_name {params.experiment_name} --R_parent_name {params.R_parent_name} --S_parent_name {params.S_parent_name}  --R_bulk_path {params.R_bulk_path} --S_bulk_path {params.S_bulk_path} --reference_name {params.reference_name} --snp_counts {input.snp_counts} --parent_S_min {params.parent_S_min} --parent_S_max {params.parent_S_max} --parent_R_min {params.parent_R_min} --parent_R_max {params.parent_R_max} --bulk_S_min {params.bulk_S_min} --bulk_S_max {params.bulk_S_max} --bulk_R_min {params.bulk_R_min} --bulk_R_max {params.bulk_R_max} --interesting_snps {input.interesting_snps} --blast_results {input.blast_results}
         """
