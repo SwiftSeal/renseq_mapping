@@ -4,7 +4,6 @@ library(ggplot2)
 args = commandArgs(trailingOnly = TRUE)
 
 sizes <- read.table(args[1], sep = "\t") # chromosome sizes
-filtered <- read.table(args[3], sep = "\t")
 
 bins = data.frame(chromosome=character(), x=integer()) # initialise bins
 
@@ -22,10 +21,7 @@ for(row in 1:nrow(sizes)){
   index = 1
   for(i in blast$bin) {
     x[i, "n"] = x[i, "n"] + 1 # iterate through blast, enumerate n by bin int instance
-
-    if(blast$V1[index] %in% filtered$V1) {
-      x[i, "filtered"] = x[i, "filtered"] + 1
-    }
+    x[i, "filtered"] = x[i, "filtered"] + 1
     index = index + 1
   } 
   bins = rbind(bins, x) # slap x on the end of growing df
@@ -41,7 +37,7 @@ p <- ggplot(bins, aes(x = x, y = n, group = chromosome)) +
   facet_grid(~chromosome, scales = "free_x", space = "free_x") +
   geom_ribbon(aes(ymin = 0, ymax = n), fill = "black", alpha = 0.3) +
   geom_point(aes(x = x, y = filtered), colour = "#f44336") +
-  labs(title = args[4]) +
+  labs(title = args[3]) +
   theme(panel.grid.minor = element_line(colour="white"),
         panel.grid.major = element_line(colour="white"),
         panel.background = element_rect(fill="white"),
@@ -55,4 +51,4 @@ p <- ggplot(bins, aes(x = x, y = n, group = chromosome)) +
   scale_y_continuous(paste("R genes per", binsize/1000, "kb"), expand = c(0,0)) +
   scale_x_continuous(name="Physical location (Mb)")
 
-ggsave(args[5], p, units="cm", width = 36, height = 12)
+ggsave(args[4], p, units="cm", width = 36, height = 12)
