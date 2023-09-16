@@ -348,3 +348,22 @@ rule sizes:
         """
         bioawk -c fastx '{{ print $name, length($seq) }}' {input.blast_genome} > {output}
         """
+
+rule report_plot:
+    input:
+        blast_genome = config["mapping_reference"],
+        blast_result = "results/{experiment}/blast.txt",
+        genome_size = "results/{experiment}/genome_sizes.txt"
+    output:
+        plot = "results/{experiment}/reporting/plot.png"
+    params:
+        experiment_name = config["experiment_name"]
+    conda:
+        "envs/plot.yaml"
+    resources:
+        mem_mb = 1000,
+        partition = "short"
+    shell:
+        """
+        Rscript --vanilla workflow/scripts/blast_plot.R {input.genome_size} {input.blast_result} {params.experiment_name} {output.plot}
+        """
