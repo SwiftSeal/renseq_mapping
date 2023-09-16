@@ -333,3 +333,18 @@ rule create_report:
         """
         python3 workflow/scripts/create_biparental_report.py --output {output.report} --read_counts {input.read_counts} --experiment_name {params.experiment_name} --R_parent_name {params.R_parent_name} --S_parent_name {params.S_parent_name}  --R_bulk_path {params.R_bulk_path} --S_bulk_path {params.S_bulk_path} --reference_name {params.reference_name} --snp_counts {input.snp_counts} --parent_S_min {params.parent_S_min} --parent_S_max {params.parent_S_max} --parent_R_min {params.parent_R_min} --parent_R_max {params.parent_R_max} --bulk_S_min {params.bulk_S_min} --bulk_S_max {params.bulk_S_max} --bulk_R_min {params.bulk_R_min} --bulk_R_max {params.bulk_R_max} --interesting_snps {input.interesting_snps} --blast_results {input.blast_results}
         """
+
+rule sizes:
+    input:
+        blast_genome = config["mapping_reference"]
+    output:
+        temp("results/{experiment}/genome_sizes.txt")
+    conda:
+        "envs/bioawk.yaml"
+    resources:
+        mem_mb = 1000,
+        partition = "short"
+    shell:
+        """
+        bioawk -c fastx '{{ print $name, length($seq) }}' {input.blast_genome} > {output}
+        """
