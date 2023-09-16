@@ -41,7 +41,6 @@ elif config["mode"] == "report":
             expand("results/{experiment}/filtered/{source}.vcf", source = ["parent", "bulk"], experiment = experiment_name),
             expand("results/{experiment}/plots/{source}.png", source = ["parent", "bulk"], experiment = experiment_name),
             expand("results/{experiment}/result.tsv", experiment = experiment_name),
-            expand("results/{experiment}/blast.txt", experiment = experiment_name),
             # expand("results/{experiment}/result_repulsion.tsv", experiment = experiment_name),
             # expand("results/{experiment}/result_null.tsv", experiment = experiment_name),
             expand("results/{experiment}/reporting/blast_plot.png", experiment = experiment_name),
@@ -367,4 +366,20 @@ rule report_plot:
     shell:
         """
         Rscript --vanilla workflow/scripts/blast_plot.R {input.genome_size} {input.blast_result} {params.experiment_name} {output.plot}
+        """
+
+rule blast:
+    input:
+        contigs = "results/{experiment}/reference/filtered_reference.fasta",
+        reference = config["mapping_reference"]
+    output:
+        "results/{experiment}/blast.txt"
+    conda:
+        "../envs/bowtie2.yaml"
+    resources:
+        mem_mb = 4000,
+        partition = "short"
+    shell:
+        """
+        blastn -query {input.contigs} -subject {input.reference} -outfmt 6 -out {output} | sort -k1,1 -k12,12nr -k11,11n | sort -u -k1,1 --merge > {output.blast_result}
         """
