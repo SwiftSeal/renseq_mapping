@@ -39,7 +39,7 @@ elif config["mode"] == "report":
     rule all:
         input:
             expand("results/{experiment}/filtered/{source}.vcf", source = ["parent", "bulk"], experiment = experiment_name),
-            expand("results/{experiment}/plots/{source}.png". source = ["parent", "bulk"], experiment = experiment_name),
+            expand("results/{experiment}/plots/{source}.png", source = ["parent", "bulk"], experiment = experiment_name),
             expand("results/{experiment}/result.tsv", experiment = experiment_name),
             expand("results/{experiment}/result_repulsion.tsv", experiment = experiment_name),
             expand("results/{experiment}/result_null.tsv", experiment = experiment_name)
