@@ -355,7 +355,7 @@ rule report_plot:
         blast_result = "results/{experiment}/blast.txt",
         genome_size = "results/{experiment}/genome_sizes.txt"
     output:
-        plot = "results/{experiment}/reporting/plot.png"
+        plot = "results/{experiment}/reporting/blast_plot.png"
     params:
         experiment_name = config["experiment_name"]
     conda:
