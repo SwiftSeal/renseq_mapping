@@ -49,6 +49,8 @@ def parse_args():
                         type=str, help='Path to interesting snps file')
     parser.add_argument('--blast_results', required=True, type=str,
                         help='Path to file of blast results of contigs against reference')
+    parser.add_argument('--results_count', required=True, type=str,
+                        help='Result count file produced from renseq_mapping workflow')
     return parser.parse_args()
 
 # Prepare function to get necessary data
@@ -93,7 +95,7 @@ def get_data(R_bulk_path: str, S_bulk_path: str, read_counts: list, snp_counts: 
     with open(blast_results) as blast_hits:
         blast_lines = blast_hits.readlines()
         for blast_line in blast_lines:
-            blast_line = blast_line.rstrip()
+            blast_line = blast_line.rstrip().split()
             contig = blast_line[0]
             chromosome = blast_line[1]
             blast_result_dict[contig] = chromosome
