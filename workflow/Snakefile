@@ -321,7 +321,8 @@ rule create_report:
         read_counts = expand("results/{experiment}/reporting/read_counts/{source}.{phenotype}.readcounts.txt", source = ["parent", "bulk"], experiment = experiment_name, phenotype = ["resistant", "susceptible"]),
         snp_counts = expand("results/{experiment}/reporting/snp_counts/{source}.{filtering}.snpcounts.txt", experiment = experiment_name, source = ["parent", "bulk"], filtering = ["filtered", "unfiltered"]),
         interesting_snps = "results/{experiment}/interesting_snps.txt",
-        blast_results = "results/{experiment}/blast.txt"
+        blast_results = "results/{experiment}/blast.txt",
+        results_count = "results/{experiment}/results_count.txt"
     output:
         report = "results/{experiment}/reporting/report.txt"
     params:
@@ -344,7 +345,7 @@ rule create_report:
         partition = "short"
     shell:
         """
-        python3 workflow/scripts/create_biparental_report.py --output {output.report} --read_counts {input.read_counts} --experiment_name {params.experiment_name} --R_parent_name {params.R_parent_name} --S_parent_name {params.S_parent_name}  --R_bulk_path {params.R_bulk_path} --S_bulk_path {params.S_bulk_path} --reference_name {params.reference_name} --snp_counts {input.snp_counts} --parent_S_min {params.parent_S_min} --parent_S_max {params.parent_S_max} --parent_R_min {params.parent_R_min} --parent_R_max {params.parent_R_max} --bulk_S_min {params.bulk_S_min} --bulk_S_max {params.bulk_S_max} --bulk_R_min {params.bulk_R_min} --bulk_R_max {params.bulk_R_max} --interesting_snps {input.interesting_snps} --blast_results {input.blast_results}
+        python3 workflow/scripts/create_biparental_report.py --output {output.report} --read_counts {input.read_counts} --experiment_name {params.experiment_name} --R_parent_name {params.R_parent_name} --S_parent_name {params.S_parent_name}  --R_bulk_path {params.R_bulk_path} --S_bulk_path {params.S_bulk_path} --reference_name {params.reference_name} --snp_counts {input.snp_counts} --parent_S_min {params.parent_S_min} --parent_S_max {params.parent_S_max} --parent_R_min {params.parent_R_min} --parent_R_max {params.parent_R_max} --bulk_S_min {params.bulk_S_min} --bulk_S_max {params.bulk_S_max} --bulk_R_min {params.bulk_R_min} --bulk_R_max {params.bulk_R_max} --interesting_snps {input.interesting_snps} --blast_results {input.blast_results} --results_count {input.results_count}
         """
 
 rule sizes:
