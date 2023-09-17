@@ -67,12 +67,12 @@ def get_data(R_bulk_path: str, S_bulk_path: str, read_counts: list, snp_counts: 
     read_count_dict = defaultdict(list)
     for read_count_file in read_counts:
         read_count_filename = read_count_file.split('/')[-1]
-        read_count_source = read_count_filename.split('.')[1]
-        read_count_phenotype = read_count_filename.split('.')[2]
+        read_count_source = read_count_filename.split('.')[0]
+        read_count_phenotype = read_count_filename.split('.')[1]
         with open(read_count_file) as read_count_results:
             read_count_lines = read_count_results.readlines()
-            R1 = read_count_lines[0].rstrip()
-            R2 = read_count_lines[1].rstrip()
+            R1 = read_count_lines[0].rstrip().split()[1]
+            R2 = read_count_lines[1].rstrip().split()[1]
         read_count_ID = read_count_source + "_" + read_count_phenotype
         read_count_dict[read_count_ID] = [R1, R2]
 
@@ -80,8 +80,8 @@ def get_data(R_bulk_path: str, S_bulk_path: str, read_counts: list, snp_counts: 
     snp_count_dict = defaultdict(float)
     for snp_count_file in snp_counts:
         snp_count_filename = snp_count_file.split('/')[-1]
-        snp_count_source = snp_count_filename.split('.')[1]
-        snp_count_filtering = snp_count_filename.split('.')[2]
+        snp_count_source = snp_count_filename.split('.')[0]
+        snp_count_filtering = snp_count_filename.split('.')[1]
         with open(snp_count_file) as snp_count_results:
             snp_count_lines = snp_count_results.readlines()
             snp_count = snp_count_lines[0].rstrip()
