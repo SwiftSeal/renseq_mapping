@@ -181,6 +181,7 @@ def write_output(R_bulk_path: str, S_bulk_path: str, read_counts: list, snp_coun
         outfile.write('\n')
         outfile.write("Maximum Frequency: ")
         outfile.write(str(parent_S_max))
+        outfile.write('\n')
         outfile.write("Resistant Bulk:")
         outfile.write('\n')
         outfile.write("Minimum Frequency: ")
