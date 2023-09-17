@@ -106,7 +106,7 @@ def get_data(R_bulk_path: str, S_bulk_path: str, read_counts: list, snp_counts: 
 # Prepare function to write out report file
 
 
-def write_output(R_bulk_path: str, S_bulk_path: str, read_counts: list, snp_counts: list, blast_results: str, output: str, experiment_name: str, R_parent_name: str, S_parent_name: str, parent_R_min: float, parent_R_max: float, parent_S_min: float, parent_S_max: float, bulk_R_min: float, bulk_R_max: float, bulk_S_min: float, bulk_S_max: float, interesting_snps: str):
+def write_output(R_bulk_path: str, S_bulk_path: str, read_counts: list, snp_counts: list, blast_results: str, output: str, experiment_name: str, R_parent_name: str, S_parent_name: str, parent_R_min: float, parent_R_max: float, parent_S_min: float, parent_S_max: float, bulk_R_min: float, bulk_R_max: float, bulk_S_min: float, bulk_S_max: float, interesting_snps: str, results_count: str):
     R_bulk_name, S_bulk_name, read_count_dict, snp_count_dict, blast_result_dict = get_data(
         R_bulk_path, S_bulk_path, read_counts, snp_counts, blast_results)
     with open(output, 'w') as outfile:
@@ -220,6 +220,14 @@ def write_output(R_bulk_path: str, S_bulk_path: str, read_counts: list, snp_coun
         outfile.write("Bulk: ")
         outfile.write(str(snp_count_dict["bulk_filtered"]))
         outfile.write('\n')
+        outfile.write("Total number of SNPs identified for final results:")
+        outfile.write('\n')
+        with open(results_count) as count:
+            count_lines = count.readlines()
+            count_line = count_lines[0].rstrip()
+            outfile.write(count_line)
+            outfile.write('\n')
+        results_count.close()
         outfile.write('\n')
 
         # Write out interesting SNPs
@@ -265,8 +273,9 @@ def main():
     bulk_S_min = args.bulk_S_min
     bulk_S_max = args.bulk_S_max
     interesting_snps = args.interesting_snps
+    results_count = args.results_count
     write_output(R_bulk_path, S_bulk_path, read_counts, snp_counts, blast_results, output, experiment_name, R_parent_name, S_parent_name,
-                 parent_R_min, parent_R_max, parent_S_min, parent_S_max, bulk_R_min, bulk_R_max, bulk_S_min, bulk_S_max, interesting_snps)
+                 parent_R_min, parent_R_max, parent_S_min, parent_S_max, bulk_R_min, bulk_R_max, bulk_S_min, bulk_S_max, interesting_snps, results_count)
 
 
 if __name__ == '__main__':
