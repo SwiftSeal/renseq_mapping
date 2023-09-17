@@ -234,6 +234,7 @@ def write_output(R_bulk_path: str, S_bulk_path: str, read_counts: list, snp_coun
 
         # Write out BLAST locations in DM
         outfile.write("Locations of contigs in DM:")
+        outfile.write('\n')
         for contig in blast_result_dict.keys():
             chromosome = blast_result_dict[contig]
             list_to_write = [contig, chromosome]
