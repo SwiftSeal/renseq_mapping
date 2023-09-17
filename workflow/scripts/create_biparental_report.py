@@ -227,7 +227,7 @@ def write_output(R_bulk_path: str, S_bulk_path: str, read_counts: list, snp_coun
             count_line = count_lines[0].rstrip()
             outfile.write(count_line)
             outfile.write('\n')
-        results_count.close()
+        count.close()
         outfile.write('\n')
 
         # Write out interesting SNPs
