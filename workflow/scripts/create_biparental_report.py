@@ -220,6 +220,7 @@ def write_output(R_bulk_path: str, S_bulk_path: str, read_counts: list, snp_coun
         outfile.write("Bulk: ")
         outfile.write(str(snp_count_dict["bulk_filtered"]))
         outfile.write('\n')
+        outfile.write('\n')
         outfile.write("Total number of SNPs identified for final results:")
         outfile.write('\n')
         with open(results_count) as count:
