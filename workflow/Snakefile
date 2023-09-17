@@ -287,6 +287,19 @@ rule merge_variants:
         # write out
         intersect.to_csv(output[0], sep = "\t", index = False)
 
+rule count_results:
+    input:
+        results = "results/{experiment}/result.tsv"
+    output:
+        results = temp("results/{experiment}/results_count.txt")
+    resources:
+        mem_mb = 1000,
+        partition = "short"
+    shell:
+        """
+        cat {input.results} | tail -n +2 | wc -l > {output.results}
+        """
+
 rule identify_SNPs_in_NLRs:
     input:
         nlr_bed = config["nlr_bed"],
