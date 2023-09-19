@@ -384,6 +384,19 @@ rule count_results:
         cat {input.results} | tail -n +2 | wc -l > {output.results}
         """
 
+rule count_results_repulsion:
+    input:
+        results = "results/{experiment}/result_repulsion.tsv"
+    output:
+        results = temp("results/{experiment}/results_count_repulsion.txt")
+    resources:
+        mem_mb = 1000,
+        partition = "short"
+    shell:
+        """
+        cat {input.results} | tail -n +2 | wc -l > {output.results}
+        """
+
 rule identify_SNPs_in_NLRs:
     input:
         nlr_bed = config["nlr_bed"],
