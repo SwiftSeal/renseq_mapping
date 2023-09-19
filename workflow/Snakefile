@@ -413,6 +413,22 @@ rule identify_SNPs_in_NLRs:
         python workflow/scripts/find_interesting_snps_biparental.py --input_SNPs {input.vcf} --input_NLRs {input.nlr_bed} --output {output.snps} --flanking {params.flanking}
         """
 
+rule identify_SNPs_in_NLRs_repulsion:
+    input:
+        nlr_bed = config["nlr_bed"],
+        vcf = "results/{experiment}/result_repulsion.tsv"
+    output:
+        snps = "results/{experiment}/interesting_snps_repulsion.txt"
+    params:
+        flanking = config["distance_to_be_near_nlrs"]
+    resources:
+        mem_mb = 2000,
+        partition = "short"
+    shell:
+        """
+        python workflow/scripts/find_interesting_snps_biparental.py --input_SNPs {input.vcf} --input_NLRs {input.nlr_bed} --output {output.snps} --flanking {params.flanking}
+        """
+
 rule create_report:
     input:
         read_counts = expand("results/{experiment}/reporting/read_counts/{source}.{phenotype}.readcounts.txt", source = ["parent", "bulk"], experiment = experiment_name, phenotype = ["resistant", "susceptible"]),
