@@ -348,6 +348,29 @@ rule merge_variants:
         # write out
         intersect.to_csv(output[0], sep = "\t", index = False)
 
+rule merge_variants_repulsion:
+    input:
+        expand("results/{experiment}/filtered/{source}_repulsion.vcf", source = ["parent", "bulk"], experiment = experiment_name)
+    output:
+        report("results/{experiment}/result_repulsion.tsv")
+    run:
+        parent_df = pd.read_csv(input[0], sep = "\t", comment = "#", header = None)
+        parent_df = parent_df[[0, 1]]
+        parent_df.columns = ["chromosome", "position"]
+
+        bulk_df = pd.read_csv(input[1], sep = "\t", comment = "#", header = None)
+        bulk_df = bulk_df[[0, 1]]
+        bulk_df.columns = ["chromosome", "position"]
+
+        # add source column
+        parent_df["source"] = "parent"
+        bulk_df["source"] = "bulk"
+
+        intersect = pd.merge(parent_df, bulk_df, how = "inner", on = ["chromosome", "position"])
+
+        # write out
+        intersect.to_csv(output[0], sep = "\t", index = False)
+
 rule count_results:
     input:
         results = "results/{experiment}/result.tsv"
